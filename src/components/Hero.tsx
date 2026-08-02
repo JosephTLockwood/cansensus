@@ -43,6 +43,24 @@ export function Hero({ totalVotes, drinkCount, myCount }: Props) {
             <Stat value={myCount} label="Rated by you" color="var(--orange)" />
           </div>
         </div>
+
+        <a href="#rate" className="scrollCue">
+          <span>Scroll — six sections</span>
+          <svg
+            className="scrollCueArrow"
+            width="10"
+            height="14"
+            viewBox="0 0 10 14"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M5 0v12M1 8l4 4 4-4"
+              stroke="currentColor"
+              strokeWidth="1.6"
+            />
+          </svg>
+        </a>
       </div>
     </section>
   );

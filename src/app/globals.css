@@ -39,9 +39,16 @@
 
   /* rhythm */
   --gutter: clamp(16px, 4vw, 24px);
-  --section-y: clamp(44px, 7vw, 72px);
+  --section-y: clamp(40px, 5.5vw, 64px);
   --cell-x: clamp(12px, 2.5vw, 20px);
   --radius: 20px;
+  --nav-h: 52px;
+
+  /* Hero headline. The three design-intended lines only hold while the font
+     size stays under (container width / 8.3) — "The definitive" is the widest
+     line at 7.96em, and past that it wraps mid-phrase into five lines. The
+     108px cap is what keeps the whole header inside the first viewport. */
+  --hero-fs: clamp(42px, 9vw, 108px);
 }
 
 *,
@@ -211,6 +218,8 @@ input[type="range"]::-moz-range-thumb {
   border-bottom: 1px solid var(--line);
 }
 
+/* Single row at every width — wrapping made this 106px tall on a phone,
+   which ate an eighth of the viewport before any content appeared. */
 .nav {
   position: sticky;
   top: 0;
@@ -218,8 +227,8 @@ input[type="range"]::-moz-range-thumb {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px 18px;
-  flex-wrap: wrap;
+  gap: 12px;
+  flex-wrap: nowrap;
   padding: 10px clamp(14px, 3vw, 24px);
   background: rgba(10, 11, 9, 0.86);
   backdrop-filter: blur(12px);
@@ -230,6 +239,7 @@ input[type="range"]::-moz-range-thumb {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: none;
 }
 
 .navBrandDot {
@@ -247,17 +257,34 @@ input[type="range"]::-moz-range-thumb {
 
 .navLinks {
   display: flex;
-  gap: 16px;
+  gap: clamp(10px, 1.4vw, 16px);
   overflow-x: auto;
-  max-width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: center;
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   white-space: nowrap;
+  scrollbar-width: none;
+}
+
+.navLinks::-webkit-scrollbar {
+  display: none;
+}
+
+/* Below 600px there is no room between the brand and the CTA for these to be
+   legible — they clipped to fragments like "RENDS MA". The hero CTA and the
+   scroll cue cover navigation on phones. */
+@media (max-width: 599px) {
+  .navLinks {
+    display: none;
+  }
 }
 
 .navCta {
+  flex: none;
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.14em;
@@ -279,10 +306,32 @@ input[type="range"]::-moz-range-thumb {
    Hero
    ========================================================================== */
 
+/* The header fits inside the first viewport and deliberately stops short of
+   it — 86svh leaves the lime ticker strip and the top of section 01 peeking
+   below the fold, which signals "keep scrolling" far better than any cue text.
+   min-height (not height) means content grows rather than clips on short
+   windows or at large text-zoom. */
 .hero {
   position: relative;
-  padding: clamp(40px, 7vw, 72px) var(--gutter) 40px;
+  min-height: calc(86svh - var(--nav-h));
+  display: flex;
+  flex-direction: column;
+  padding: clamp(26px, 3.2vw, 44px) var(--gutter) clamp(20px, 2.4vw, 28px);
   border-bottom: 1px solid var(--line);
+}
+
+.hero > .wrap {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Phones want density over drama — 86svh left a ~240px void under the stats. */
+@media (max-width: 599px) {
+  .hero {
+    min-height: calc(72svh - var(--nav-h));
+  }
 }
 
 .heroKicker {
@@ -306,29 +355,67 @@ input[type="range"]::-moz-range-thumb {
 
 .heroTitle {
   font-family: var(--display);
-  font-size: clamp(56px, 11.5vw, 168px);
-  line-height: 0.84;
-  letter-spacing: -0.045em;
+  font-size: var(--hero-fs);
+  line-height: 0.86;
+  letter-spacing: -0.04em;
   text-transform: uppercase;
-  margin: 18px 0 0;
+  margin: clamp(12px, 1.4vw, 18px) 0 0;
 }
 
 .heroBottom {
   display: flex;
   flex-wrap: wrap;
-  gap: 28px;
+  gap: clamp(20px, 2.6vw, 28px);
   align-items: flex-end;
   justify-content: space-between;
-  margin-top: clamp(24px, 4vw, 36px);
+  margin-top: clamp(20px, 2.8vw, 32px);
 }
 
 .heroCopy {
   max-width: 520px;
-  font-size: 17px;
-  line-height: 1.5;
+  font-size: clamp(15px, 1.1vw, 16px);
+  line-height: 1.55;
   color: var(--muted);
   text-wrap: pretty;
   margin: 0;
+}
+
+/* Scroll affordance. margin-top:auto pins it to the bottom of the hero so the
+   header block stays anchored near the top instead of floating mid-viewport. */
+.scrollCue {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: clamp(24px, 3vw, 44px);
+  align-self: flex-start;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--faint);
+  transition: color 0.16s;
+}
+
+.scrollCue:hover {
+  color: var(--lime);
+}
+
+.scrollCueArrow {
+  display: block;
+  animation: edl-nudge 1.9s ease-in-out infinite;
+}
+
+@keyframes edl-nudge {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateY(4px);
+    opacity: 1;
+  }
 }
 
 .heroStats {
@@ -337,17 +424,19 @@ input[type="range"]::-moz-range-thumb {
   flex-wrap: wrap;
 }
 
+/* 96px rather than 112px so all three sit on one row on a 390px phone
+   instead of breaking 2 + 1. */
 .statBox {
   border: 1px solid var(--line-2);
   border-radius: 14px;
-  padding: 14px 18px;
-  min-width: 112px;
-  flex: 1 1 112px;
+  padding: clamp(11px, 1.2vw, 14px) clamp(13px, 1.5vw, 18px);
+  min-width: 96px;
+  flex: 1 1 96px;
 }
 
 .statValue {
   font-family: var(--display);
-  font-size: 38px;
+  font-size: clamp(27px, 2.5vw, 36px);
   line-height: 1;
 }
 
@@ -409,7 +498,7 @@ input[type="range"]::-moz-range-thumb {
 
 .sectionTitle {
   font-family: var(--display);
-  font-size: clamp(34px, 5vw, 64px);
+  font-size: clamp(30px, 4.2vw, 52px);
   line-height: 0.9;
   letter-spacing: -0.035em;
   text-transform: uppercase;
@@ -977,9 +1066,9 @@ input[type="range"]::-moz-range-thumb {
 
 .footerType {
   font-family: var(--display);
-  font-size: clamp(40px, 10vw, 150px);
-  line-height: 0.84;
-  letter-spacing: -0.05em;
+  font-size: clamp(34px, 7vw, 96px);
+  line-height: 0.86;
+  letter-spacing: -0.045em;
   text-transform: uppercase;
   color: var(--row-hover);
 }
