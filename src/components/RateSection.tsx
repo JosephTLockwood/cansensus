@@ -1,0 +1,271 @@
+"use client";
+
+import { SLIDER_DEFS } from "@/lib/data";
+import { blended, compositeScore, verdictFor } from "@/lib/scoring";
+import type { Drink, Ratings, SliderKey, Vals } from "@/lib/types";
+import { SectionHeader } from "./SectionHeader";
+
+type Props = {
+  /** Chips are shown in current league order. */
+  chipOrder: Drink[];
+  selected: Drink;
+  ratings: Ratings;
+  vals: Vals;
+  onSelect: (id: string) => void;
+  onChangeVal: (key: SliderKey, value: number) => void;
+  onSubmit: () => void;
+  onRoulette: () => void;
+};
+
+export function RateSection({
+  chipOrder,
+  selected,
+  ratings,
+  vals,
+  onSelect,
+  onChangeVal,
+  onSubmit,
+  onRoulette,
+}: Props) {
+  const liveScore = compositeScore(vals);
+  const mine = ratings[selected.id];
+
+  return (
+    <section id="rate" className="section">
+      <div className="wrap">
+        <SectionHeader num="01" title="Log a can" />
+        <p className="lede" style={{ margin: "12px 0 28px" }}>
+          Pick what you&apos;ve had. Four scores, five seconds, no essay
+          required.
+        </p>
+
+        <div className="grid310">
+          {/* ---- the form ---- */}
+          <div className="card">
+            <div className="label" style={{ marginBottom: 14 }}>
+              Step 1 — choose your poison
+            </div>
+            <div className="chipRow">
+              {chipOrder.map((d) => {
+                const on = d.id === selected.id;
+                const rated = !!ratings[d.id];
+                return (
+                  <button
+                    key={d.id}
+                    type="button"
+                    className="chip"
+                    onClick={() => onSelect(d.id)}
+                    aria-pressed={on}
+                    style={{
+                      border: `1px solid ${on ? "#D8FF3E" : rated ? "#3A4030" : "#23261E"}`,
+                      background: on ? "rgba(216,255,62,.12)" : "transparent",
+                      color: on ? "#D8FF3E" : rated ? "#F2F4EE" : "#8A9179",
+                    }}
+                  >
+                    <span
+                      className="chipSwatch"
+                      style={{ background: d.color }}
+                      aria-hidden="true"
+                    />
+                    {d.name}
+                  </button>
+                );
+              })}
+            </div>
+
+            <hr className="rule" />
+
+            <div className="label" style={{ marginBottom: 16 }}>
+              Step 2 — score it
+            </div>
+            {SLIDER_DEFS.map((s) => (
+              <div key={s.key} style={{ marginBottom: 20 }}>
+                <div className="sliderHead">
+                  <div>
+                    <label
+                      htmlFor={`slider-${s.key}`}
+                      style={{ fontWeight: 700, fontSize: 15 }}
+                    >
+                      {s.label}
+                    </label>
+                    <span
+                      className="mono"
+                      style={{
+                        fontSize: 11,
+                        color: "var(--dim)",
+                        marginLeft: 10,
+                      }}
+                    >
+                      {s.hint}
+                    </span>
+                  </div>
+                  <span className="sliderValue">{vals[s.key]}</span>
+                </div>
+                <input
+                  id={`slider-${s.key}`}
+                  type="range"
+                  min={1}
+                  max={10}
+                  step={1}
+                  value={vals[s.key]}
+                  onChange={(e) => onChangeVal(s.key, Number(e.target.value))}
+                />
+              </div>
+            ))}
+
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                alignItems: "center",
+                flexWrap: "wrap",
+                marginTop: 24,
+              }}
+            >
+              <button type="button" className="btnPrimary" onClick={onSubmit}>
+                Submit rating &rarr;
+              </button>
+              <button type="button" className="btnGhost" onClick={onRoulette}>
+                Roulette
+              </button>
+              <span
+                className="mono"
+                style={{ fontSize: 11, color: "var(--dim)" }}
+              >
+                {mine ? "Updates your existing rating" : "Adds a new rating"}
+              </span>
+            </div>
+          </div>
+
+          {/* ---- the can being rated ---- */}
+          <div className="selCard">
+            <div
+              style={{
+                display: "flex",
+                gap: 20,
+                alignItems: "flex-start",
+                flexWrap: "wrap",
+              }}
+            >
+              <div
+                className="can"
+                style={{
+                  background: `linear-gradient(155deg,${selected.color},#0A0B09 130%)`,
+                }}
+              >
+                <span className="canSheen" />
+                <span className="canRibTop" />
+                <span className="canRibBottom" />
+                <div className="canLabel">
+                  <span className="canLabelText">{selected.name}</span>
+                </div>
+              </div>
+
+              <div style={{ minWidth: 0 }}>
+                <div className="label">Now rating</div>
+                <div
+                  className="display"
+                  style={{
+                    fontSize: 30,
+                    lineHeight: 1,
+                    letterSpacing: "-.03em",
+                    textTransform: "uppercase",
+                    margin: "8px 0 4px",
+                  }}
+                >
+                  {selected.name}
+                </div>
+                <div
+                  className="mono"
+                  style={{ fontSize: 12, color: "var(--muted)" }}
+                >
+                  {selected.sub} · {selected.caf} mg caffeine · {selected.sug} g
+                  sugar · ${selected.price.toFixed(2)}
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    flexWrap: "wrap",
+                    marginTop: 14,
+                  }}
+                >
+                  {selected.tags.map((t) => (
+                    <span key={t} className="tag">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 18,
+                    paddingTop: 16,
+                    borderTop: "1px solid var(--line)",
+                  }}
+                >
+                  <div className="kv">
+                    <span>Crowd score</span>
+                    <span style={{ color: "var(--lime)", fontWeight: 700 }}>
+                      {blended(selected, ratings).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="kv" style={{ marginTop: 6 }}>
+                    <span>Your last score</span>
+                    <span style={{ color: "var(--orange)", fontWeight: 700 }}>
+                      {mine ? mine.score.toFixed(2) : "—"}
+                    </span>
+                  </div>
+                  <div className="kv" style={{ marginTop: 6 }}>
+                    <span>Ratings</span>
+                    <span style={{ color: "var(--text)" }}>
+                      {(selected.v + (mine ? 1 : 0)).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                marginTop: 20,
+                borderTop: "1px solid var(--line)",
+                paddingTop: 16,
+              }}
+            >
+              <div className="label" style={{ marginBottom: 10 }}>
+                Live preview of your verdict
+              </div>
+              <div
+                style={{ display: "flex", alignItems: "baseline", gap: 12 }}
+              >
+                <span
+                  className="display"
+                  style={{
+                    fontSize: 60,
+                    lineHeight: 0.9,
+                    color: "var(--lime)",
+                  }}
+                >
+                  {liveScore.toFixed(2)}
+                </span>
+                <span
+                  className="mono"
+                  style={{
+                    fontSize: 12,
+                    color: "var(--muted)",
+                    textTransform: "uppercase",
+                    letterSpacing: ".1em",
+                  }}
+                >
+                  {verdictFor(liveScore)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

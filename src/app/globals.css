@@ -1,49 +1,1033 @@
+/* ==========================================================================
+   Energy League — design tokens + structural styles
+   Palette and type scale are ported 1:1 from the Claude Design source.
+   Rule of thumb: static layout lives here, per-datum values stay inline.
+   ========================================================================== */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* surfaces */
+  --ink: #0a0b09;
+  --panel: #0e100c;
+  --panel-2: #12140e;
+  --panel-open: #111409;
+
+  /* text */
+  --text: #f2f4ee;
+  --muted: #b9bfac;
+  --dim: #8a9179;
+  --faint: #5e6552;
+  --rank-dim: #4a5040;
+
+  /* strokes */
+  --line: #1e2119;
+  --line-2: #23261e;
+  --line-3: #2c3024;
+  --row-line: #16190f;
+  --row-hover: #15180f;
+
+  /* accents */
+  --lime: #d8ff3e;
+  --orange: #ff5b24;
+  --gold: #ffc53e;
+  --cyan: #3ee8ff;
+  --violet: #b77bff;
+
+  /* families — the --font-* vars are injected by next/font in layout.tsx */
+  --sans: var(--font-archivo), Archivo, Helvetica, Arial, sans-serif;
+  --display: var(--font-archivo-black), "Archivo Black", var(--sans);
+  --mono: var(--font-mono), "JetBrains Mono", ui-monospace, monospace;
+
+  /* rhythm */
+  --gutter: clamp(16px, 4vw, 24px);
+  --section-y: clamp(44px, 7vw, 72px);
+  --cell-x: clamp(12px, 2.5vw, 20px);
+  --radius: 20px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 html {
-  height: 100%;
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
+  scroll-behavior: smooth;
 }
 
 body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
 a {
-  color: inherit;
+  color: var(--lime);
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+a:hover {
+  color: var(--orange);
+}
+
+::selection {
+  background: var(--lime);
+  color: var(--ink);
+}
+
+button {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 2px;
+}
+
+/* ---------- range slider ---------- */
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  width: 100%;
+  height: 22px;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  background: var(--line-2);
+  border-radius: 99px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 22px;
+  width: 22px;
+  margin-top: -8px;
+  border-radius: 99px;
+  background: var(--lime);
+  border: 2px solid var(--ink);
+  cursor: grab;
+}
+
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  background: var(--line-2);
+  border-radius: 99px;
+}
+
+input[type="range"]::-moz-range-thumb {
+  height: 18px;
+  width: 18px;
+  border-radius: 99px;
+  background: var(--lime);
+  border: 2px solid var(--ink);
+  cursor: grab;
+}
+
+/* ---------- motion ---------- */
+
+@keyframes edl-marquee {
+  from {
+    transform: translateX(0);
   }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes edl-pop {
+  0% {
+    transform: translateY(12px) scale(0.96);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ==========================================================================
+   Type helpers
+   ========================================================================== */
+
+.mono {
+  font-family: var(--mono);
+}
+
+.display {
+  font-family: var(--display);
+}
+
+/* the small uppercase mono kicker that sits above nearly every block */
+.label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.lede {
+  color: var(--dim);
+  font-size: 15px;
+  margin: 12px 0 26px;
+}
+
+/* ==========================================================================
+   Shell + nav
+   ========================================================================== */
+
+.shell {
+  min-height: 100vh;
+  background: var(--ink);
+  overflow-x: hidden;
+}
+
+.wrap {
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.section {
+  padding: var(--section-y) var(--gutter);
+  border-bottom: 1px solid var(--line);
+}
+
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 18px;
+  flex-wrap: wrap;
+  padding: 10px clamp(14px, 3vw, 24px);
+  background: rgba(10, 11, 9, 0.86);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+
+.navBrand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.navBrandDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 99px;
+  background: var(--lime);
+}
+
+.navBrandName {
+  font-family: var(--display);
+  font-size: 15px;
+  letter-spacing: -0.02em;
+}
+
+.navLinks {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  max-width: 100%;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.navCta {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: var(--lime);
+  color: var(--ink);
+  padding: 8px 14px;
+  border-radius: 99px;
+  font-weight: 700;
+  transition: background 0.16s;
+}
+
+.navCta:hover {
+  color: var(--ink);
+  background: #e6ff6b;
+}
+
+/* ==========================================================================
+   Hero
+   ========================================================================== */
+
+.hero {
+  position: relative;
+  padding: clamp(40px, 7vw, 72px) var(--gutter) 40px;
+  border-bottom: 1px solid var(--line);
+}
+
+.heroKicker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.heroKickerDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 99px;
+  background: var(--orange);
+  flex: none;
+}
+
+.heroTitle {
+  font-family: var(--display);
+  font-size: clamp(56px, 11.5vw, 168px);
+  line-height: 0.84;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
+  margin: 18px 0 0;
+}
+
+.heroBottom {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: clamp(24px, 4vw, 36px);
+}
+
+.heroCopy {
+  max-width: 520px;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--muted);
+  text-wrap: pretty;
+  margin: 0;
+}
+
+.heroStats {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.statBox {
+  border: 1px solid var(--line-2);
+  border-radius: 14px;
+  padding: 14px 18px;
+  min-width: 112px;
+  flex: 1 1 112px;
+}
+
+.statValue {
+  font-family: var(--display);
+  font-size: 38px;
+  line-height: 1;
+}
+
+.statLabel {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-top: 6px;
+}
+
+/* ==========================================================================
+   Marquee
+   ========================================================================== */
+
+.marquee {
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+  background: var(--lime);
+}
+
+.marqueeTrack {
+  display: flex;
+  width: max-content;
+  animation: edl-marquee 38s linear infinite;
+}
+
+.marqueeText {
+  display: flex;
+  gap: 34px;
+  padding: 9px 17px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   Section headers
+   ========================================================================== */
+
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.sectionNum {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--dim);
+}
+
+.sectionTitle {
+  font-family: var(--display);
+  font-size: clamp(34px, 5vw, 64px);
+  line-height: 0.9;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* ==========================================================================
+   Cards + grids
+   ========================================================================== */
+
+.card {
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  padding: 20px;
+  background: var(--panel);
+}
+
+.grid310 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+.grid300 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 26px;
+}
+
+.grid280 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.grid230 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 24px;
+}
+
+.rule {
+  height: 1px;
+  background: var(--line);
+  margin: 22px 0;
+  border: 0;
+}
+
+/* ==========================================================================
+   Buttons + chips
+   ========================================================================== */
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 99px;
+  padding: 8px 14px 8px 9px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.16s;
+}
+
+/* !important because the border colour is a per-datum inline style */
+.chip:hover {
+  border-color: var(--lime) !important;
+}
+
+.chipSwatch {
+  width: 12px;
+  height: 16px;
+  border-radius: 3px;
+  flex: none;
+}
+
+.btnPrimary {
+  font-family: var(--display);
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  background: var(--lime);
+  color: var(--ink);
+  border: none;
+  border-radius: 99px;
+  padding: 15px 30px;
+  cursor: pointer;
+  transition: transform 0.14s;
+}
+
+.btnPrimary:hover {
+  transform: translateY(-2px);
+}
+
+.btnGhost {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--line-2);
+  border-radius: 99px;
+  padding: 14px 20px;
+  cursor: pointer;
+  transition: all 0.16s;
+}
+
+.btnGhost:hover {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+.btnOutline {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: transparent;
+  border: 1px solid var(--line-3);
+  color: var(--lime);
+  border-radius: 99px;
+  padding: 9px 16px;
+  cursor: pointer;
+  transition: border-color 0.16s;
+}
+
+.btnOutline:hover {
+  border-color: var(--lime);
+}
+
+.filterChip {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 99px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: all 0.16s;
+}
+
+.tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid var(--line-3);
+  border-radius: 99px;
+  padding: 5px 10px;
+  color: var(--muted);
+}
+
+/* ==========================================================================
+   Rate section
+   ========================================================================== */
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.selCard {
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  padding: 20px;
+  background: linear-gradient(160deg, #12140e, #0a0b09);
+}
+
+.can {
+  width: 96px;
+  height: 180px;
+  border-radius: 10px 10px 14px 14px;
+  flex: none;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line-3);
+}
+
+.canSheen {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.22),
+    transparent 38%,
+    rgba(0, 0, 0, 0.35)
+  );
+}
+
+.canRibTop {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 14px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.canRibBottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 16px;
+  height: 2px;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.canLabel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.canLabelText {
+  font-family: var(--display);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  color: rgba(10, 11, 9, 0.85);
+  text-align: center;
+  max-height: 150px;
+  overflow: hidden;
+}
+
+.sliderHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.sliderValue {
+  font-family: var(--display);
+  font-size: 22px;
+  color: var(--lime);
+  line-height: 1;
+}
+
+/* label / value row used in the spec panel and the lab cards */
+.kv {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+}
+
+/* ==========================================================================
+   Standings table
+   ========================================================================== */
+
+.tableWrap {
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--panel);
+}
+
+/* The one place the layout genuinely changes shape on small screens: the
+   extended nutrition columns collapse out and the grid narrows to four. */
+.tableGrid {
+  display: grid;
+  grid-template-columns: 64px minmax(180px, 2.2fr) 1.5fr 0.8fr 0.9fr 0.8fr 0.9fr 68px;
+  gap: 10px;
+}
+
+.tableHead {
+  padding: 14px var(--cell-x);
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--line-2);
+}
+
+.colBtn {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.row {
+  border-bottom: 1px solid var(--row-line);
+}
+
+.rowInner {
+  padding: 13px var(--cell-x);
+  align-items: center;
+  cursor: pointer;
+  transition: background 0.15s;
+  text-align: left;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.rowInner:hover {
+  background: var(--row-hover);
+}
+
+.rowRank {
+  font-family: var(--display);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.rowName {
+  font-weight: 700;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rowSub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rowSwatch {
+  width: 14px;
+  height: 26px;
+  border-radius: 3px;
+  flex: none;
+}
+
+.rowNum {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  text-align: right;
+}
+
+.bar {
+  height: 5px;
+  border-radius: 99px;
+  background: var(--line);
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 99px;
+}
+
+.rowDetail {
+  padding: 6px var(--cell-x) 22px;
+  animation: edl-pop 0.2s ease-out;
+}
+
+.breakdownRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 9px;
+}
+
+.breakdownLabel {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  width: 82px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 779px) {
+  .tableGrid {
+    grid-template-columns: 32px minmax(0, 2.2fr) 1.25fr 44px;
+  }
+  .colExt {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   Trends
+   ========================================================================== */
+
+.trendRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--row-line);
+}
+
+.trendSwatch {
+  width: 10px;
+  height: 20px;
+  border-radius: 2px;
+  flex: none;
+}
+
+.trendName {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trendChange {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  width: 46px;
+  text-align: right;
+}
+
+.divisiveCard {
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  padding: 20px;
+  background: linear-gradient(160deg, #1a1206, #0a0b09);
+}
+
+.divisiveRow {
+  padding: 10px 0;
+  border-bottom: 1px solid #241c0c;
+}
+
+.splitBar {
+  display: flex;
+  height: 6px;
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 8px;
+  background: var(--line);
+}
+
+/* ==========================================================================
+   Flavour map
+   ========================================================================== */
+
+.mapBox {
+  position: relative;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: radial-gradient(circle at 50% 50%, #12140e, #0a0b09 70%);
+  min-height: 330px;
+  height: 520px;
+  overflow: hidden;
+}
+
+.mapAxisH {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--line);
+}
+
+.mapAxisV {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: var(--line);
+}
+
+.mapAxisLabel {
+  position: absolute;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.mapDot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  line-height: 0;
+}
+
+.mapDotInner {
+  display: block;
+  border-radius: 99px;
+  transition: all 0.18s;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.mapReadout {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  border: 1px solid var(--line-3);
+  border-radius: 14px;
+  padding: 12px 16px;
+  background: rgba(10, 11, 9, 0.92);
+  min-width: 200px;
+  max-width: calc(100% - 28px);
+}
+
+@media (max-width: 779px) {
+  .mapBox {
+    height: 420px;
+  }
+}
+
+/* ==========================================================================
+   Tasters
+   ========================================================================== */
+
+.leaderRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  margin-bottom: 4px;
+}
+
+.avatar {
+  border-radius: 99px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--display);
+  color: var(--ink);
+}
+
+.twinCard {
+  border: 1px solid var(--line-3);
+  border-radius: var(--radius);
+  padding: 20px;
+  background: linear-gradient(160deg, #1a0f08, #0a0b09);
+}
+
+/* ==========================================================================
+   Footer + toast
+   ========================================================================== */
+
+.footer {
+  padding: clamp(40px, 7vw, 64px) var(--gutter) 40px;
+}
+
+.footerType {
+  font-family: var(--display);
+  font-size: clamp(40px, 10vw, 150px);
+  line-height: 0.84;
+  letter-spacing: -0.05em;
+  text-transform: uppercase;
+  color: var(--row-hover);
+}
+
+.footerMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 40px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--lime);
+  color: var(--ink);
+  border-radius: 99px;
+  padding: 13px 22px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  animation: edl-pop 0.22s ease-out;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* screen-reader-only, for the live region that announces toasts */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
