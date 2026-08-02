@@ -80,14 +80,20 @@ touches no component.
 
 ## Deployment
 
-Two targets, both configured in `next.config.ts`:
+**Live: https://energy-league.vercel.app**
 
-- **Vercel** (default) — a normal server build. This is the target for phase 2,
-  since API routes and auth need a server.
-- **GitHub Pages** — `DEPLOY_TARGET=gh-pages npm run build` emits a static
-  `out/` under the `/energy-league` base path, deployed by
-  `.github/workflows/deploy.yml`. This works only while all state is
-  client-side; the first route handler ends it.
+Two targets, both configured in `next.config.ts`, and both fire on a push to
+`main`:
+
+- **Vercel** (default, primary) — a normal server build, deployed by the Vercel
+  GitHub integration. This is the target for phase 2, since API routes and auth
+  need a server.
+- **GitHub Pages** (secondary mirror, https://josephtlockwood.github.io/energy-league/)
+  — `DEPLOY_TARGET=gh-pages npm run build` emits a static `out/` under the
+  `/energy-league` base path, deployed by `.github/workflows/deploy.yml`. This
+  works only while all state is client-side. **Delete that workflow when the
+  first route handler lands**, or Pages will start serving a silently broken
+  build.
 
 ## Known limitations
 
