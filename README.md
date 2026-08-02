@@ -100,5 +100,7 @@ Two targets, both configured in `next.config.ts`:
 
 ## Credits
 
-Design and copy from the `Energy League.dc.html` Claude Design project.
+Design and copy from the `Energy League.dc.html` Claude Design project —
+[277b0286-11d2-438b-9e4c-e19f6c98ee5e](https://claude.ai/design/p/277b0286-11d2-438b-9e4c-e19f6c98ee5e),
+the source to re-read if the design changes upstream.
 Fonts: Archivo, Archivo Black, JetBrains Mono, self-hosted via `next/font`.
