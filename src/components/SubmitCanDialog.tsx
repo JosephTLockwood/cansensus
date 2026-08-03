@@ -12,10 +12,9 @@ import { useAuthContext } from "./AuthProvider";
  * "one entry per person per can" enforceable, which is the only thing standing
  * between an unmoderated catalog and the same drink appearing five times.
  *
- * A barcode is optional. With one, the server pulls real nutrition from Open
- * Food Facts instead of trusting what was typed. Without one the can still
- * appears — that is the only route for store brands like Aldi's Gridlock that no
- * public database carries.
+ * Everything is typed off the label. There is no barcode lookup — reading the can
+ * beats hoping a crowd database has it, and it never had the store brands this
+ * matters most for.
  *
  * A photo is uploaded straight to Supabase Storage from here, before the form is
  * submitted, and only its path is sent on. Storage RLS confines a user to a
@@ -30,7 +29,6 @@ export function SubmitCanDialog({
 }) {
   const { session, profile } = useAuthContext();
   const [form, setForm] = useState({
-    barcode: "",
     name: "",
     brand: "",
     size: "",
@@ -92,7 +90,6 @@ export function SubmitCanDialog({
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          barcode: form.barcode || undefined,
           name: form.name,
           brand: form.brand,
           ml: ml ?? undefined,
@@ -146,22 +143,10 @@ export function SubmitCanDialog({
         ) : (
           <>
             <p className="modalCopy">
-              The barcode is the useful bit: with it we look the can up in Open
-              Food Facts and fill in real nutrition, and it becomes the can&apos;s
-              permanent id so nobody can add a duplicate under a different
-              spelling. Without one the can still appears — that is how store
-              brands get in — we just use the figures you type.
+              Straight off the label. It appears in the catalog immediately, and
+              a photo helps everyone else recognise it on the shelf.
             </p>
 
-            <Field
-              id="barcode"
-              label="Barcode"
-              hint="12–13 digits under the bars · fills the rest in"
-              value={form.barcode}
-              onChange={set("barcode")}
-              placeholder="070847022206"
-              inputMode="numeric"
-            />
             <div className="fieldRow">
               <Field
                 id="brand"
@@ -184,23 +169,21 @@ export function SubmitCanDialog({
               <Field
                 id="size"
                 label="Size"
-                hint={form.barcode.trim() ? "or leave to the barcode" : "oz or ml"}
+                hint="oz or ml"
                 value={form.size}
                 onChange={set("size")}
                 placeholder="16 oz"
-                required={!form.barcode.trim()}
+                required
               />
               <Field
                 id="caf"
                 label="Caffeine (mg)"
-                hint={
-                  form.barcode.trim() ? "or leave to the barcode" : "off the label"
-                }
+                hint="off the label"
                 value={form.caf}
                 onChange={set("caf")}
                 placeholder="200"
                 inputMode="numeric"
-                required={!form.barcode.trim()}
+                required
               />
               <Field
                 id="sug"
