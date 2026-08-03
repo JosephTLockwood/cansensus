@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "import:catalog": "node scripts/import-catalog.mjs",
-    "seed:sql": "node scripts/generate-seed.mjs"
+    "seed:sql": "node scripts/generate-seed.mjs",
+    "db:status": "node scripts/supabase-admin.mjs status",
+    "db:migrate": "node scripts/supabase-admin.mjs migrate",
+    "db:enable-google": "node scripts/supabase-admin.mjs enable-google"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.111.0",
