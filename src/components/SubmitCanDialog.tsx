@@ -146,15 +146,17 @@ export function SubmitCanDialog({
         ) : (
           <>
             <p className="modalCopy">
-              It appears straight away. With a barcode we pull real nutrition
-              from Open Food Facts instead of trusting your typing — without one
-              we use your figures, which is the only way in for store brands.
+              The barcode is the useful bit: with it we look the can up in Open
+              Food Facts and fill in real nutrition, and it becomes the can&apos;s
+              permanent id so nobody can add a duplicate under a different
+              spelling. Without one the can still appears — that is how store
+              brands get in — we just use the figures you type.
             </p>
 
             <Field
               id="barcode"
               label="Barcode"
-              hint="optional, but gets it live instantly"
+              hint="12–13 digits under the bars · fills the rest in"
               value={form.barcode}
               onChange={set("barcode")}
               placeholder="070847022206"
@@ -182,21 +184,23 @@ export function SubmitCanDialog({
               <Field
                 id="size"
                 label="Size"
-                hint="oz or ml"
+                hint={form.barcode.trim() ? "or leave to the barcode" : "oz or ml"}
                 value={form.size}
                 onChange={set("size")}
                 placeholder="16 oz"
-                required
+                required={!form.barcode.trim()}
               />
               <Field
                 id="caf"
                 label="Caffeine (mg)"
-                hint="off the label"
+                hint={
+                  form.barcode.trim() ? "or leave to the barcode" : "off the label"
+                }
                 value={form.caf}
                 onChange={set("caf")}
                 placeholder="200"
                 inputMode="numeric"
-                required
+                required={!form.barcode.trim()}
               />
               <Field
                 id="sug"
@@ -297,7 +301,7 @@ function Field({
 }: {
   id: string;
   label: string;
-  hint?: string;
+  hint?: React.ReactNode;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
