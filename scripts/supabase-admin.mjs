@@ -98,11 +98,13 @@ async function enableGoogle() {
       external_google_secret: secret,
       site_url: siteUrl,
       // Both hosts, plus localhost for development.
+      // The old energy-league URL stays listed so any bookmarked link still
+      // completes sign-in rather than failing on the redirect.
       uri_allow_list: [
         siteUrl,
         `${siteUrl}/`,
-        "https://josephtlockwood.github.io/cansensus",
-        "https://josephtlockwood.github.io/cansensus/",
+        "https://energy-league.vercel.app",
+        "https://energy-league.vercel.app/",
         "http://localhost:3000",
         "http://localhost:3000/",
       ].join(","),

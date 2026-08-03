@@ -301,61 +301,50 @@ export async function POST(request: Request) {
   const norm = (v: string) => v.toLowerCase().replace(/[^a-z0-9]/g, "");
   const dedupeKey = norm(`${brand}${name}`);
 
-  // With no moderator in the loop, the same can arriving under a slightly
-  // different spelling is the main way the catalog degrades. Check the whole
-  // live catalog, not just this submitter's rows, before adding anything.
-  if (!barcode) {
-    const { data: allLive } = await supabase
-      .from("drinks")
-      .select("id, name, brand")
-      .eq("status", "live");
+  // One lookup covering both cases, because they interact: a clash that belongs
+  // to THIS submitter must update their entry, and only a clash belonging to
+  // someone else (or to the imported catalog, where submitted_by is null) is a
+  // rejection. Checking them separately made resubmitting your own can fail as
+  // a duplicate instead of updating it.
+  //
+  // Barcoded cans match on the barcode. Barcode-less ones match on normalised
+  // brand+name across the WHOLE catalog — with no moderator, the same can under
+  // a slightly different spelling is how the catalog rots.
+  let existing: {
+    id: string;
+    status: string;
+    submitted_by: string | null;
+    name?: string;
+  } | null = null;
 
-    const clash = (allLive ?? []).find(
-      (d) => norm(`${d.brand}${d.name}`) === dedupeKey,
-    );
-    if (clash) {
+  if (barcode) {
+    const { data } = await supabase
+      .from("drinks")
+      .select("id, status, submitted_by, name")
+      .eq("id", barcode)
+      .maybeSingle();
+    existing = data ?? null;
+  } else {
+    const { data } = await supabase
+      .from("drinks")
+      .select("id, status, submitted_by, brand, name");
+    existing =
+      (data ?? []).find((d) => norm(`${d.brand}${d.name}`) === dedupeKey) ??
+      null;
+  }
+
+  if (existing) {
+    // Not theirs — an imported can, or somebody else's entry.
+    if (existing.submitted_by !== profile.id) {
       return NextResponse.json(
         {
-          error: `${clash.name} is already in the catalog. Search for it instead of adding it again.`,
+          error: `${existing.name ?? "That can"} is already in the catalog. Search for it instead of adding it again.`,
         },
         { status: 409 },
       );
     }
-  }
-
-  const { data: existing } = barcode
-    ? await supabase
-        .from("drinks")
-        .select("id, status, submitted_by")
-        .eq("id", barcode)
-        .maybeSingle()
-    : await supabase
-        .from("drinks")
-        .select("id, status, submitted_by, brand, name")
-        .eq("submitted_by", profile.id)
-        .eq("status", "pending")
-        .then(({ data }) => ({
-          data:
-            (data ?? []).find(
-              (d) => norm(`${d.brand}${d.name}`) === dedupeKey,
-            ) ?? null,
-        }));
-
-  if (existing) {
-    if (existing.status === "live") {
-      return NextResponse.json(
-        { error: "That can is already in the catalog." },
-        { status: 409 },
-      );
-    }
-    if (existing.submitted_by !== profile.id) {
-      return NextResponse.json(
-        { error: "Someone has already submitted that one — it is under review." },
-        { status: 409 },
-      );
-    }
-    // their own pending submission: replace it. id and submitted_by are
-    // deliberately not updated — the row keeps its identity and its owner.
+    // Their own entry: replace it. id and submitted_by are deliberately not
+    // updated — the row keeps its identity and its owner.
     const updatable = { ...row };
     delete (updatable as Partial<typeof row>).id;
     delete (updatable as Partial<typeof row>).submitted_by;
