@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDrinks } from "@/lib/use-drinks";
-import { localRatingsSource, type RatingsSource } from "@/lib/ratings-source";
+import {
+  signedOutRatingsSource,
+  type RatingsSource,
+} from "@/lib/ratings-source";
 import {
   createSupabaseRatingsSource,
   migrateLocalRatings,
@@ -38,19 +41,22 @@ export function CansensusApp({
   /** Override for tests; normally chosen from the session below. */
   ratingsSource?: RatingsSource;
 }) {
-  const { session, profile } = useAuthContext();
+  const { session, profile, signInWithGoogle } = useAuthContext();
   const { drinks, reloadDrinks } = useDrinks();
   const [submitOpen, setSubmitOpen] = useState(false);
   const userId = profile ? session?.user?.id : undefined;
 
-  // Signed in with a handle -> Postgres. Otherwise this device's localStorage,
-  // so an anonymous visitor can still rate cans and keep them.
+  // Rating requires an account. Signed out there is nothing to read and
+  // nothing can be written — reading the catalog stays open, only writes are
+  // gated, which is the same rule the database enforces.
   const source = useMemo<RatingsSource>(() => {
     if (ratingsSource) return ratingsSource;
     const supabase = getSupabase();
     if (supabase && userId) return createSupabaseRatingsSource(supabase, userId);
-    return localRatingsSource;
+    return signedOutRatingsSource;
   }, [ratingsSource, userId]);
+
+  const canRate = Boolean(userId);
 
   const { ratings, rate, reload } = useRatings(source);
 
@@ -103,6 +109,10 @@ export function CansensusApp({
   const selected = drinks.find((d) => d.id === selId) ?? drinks[0];
 
   const submit = useCallback(() => {
+    if (!canRate) {
+      flash("Sign in to rate a can");
+      return;
+    }
     const score = compositeScore(vals);
     const rating = { vals: { ...vals }, score };
 
@@ -118,7 +128,7 @@ export function CansensusApp({
     flash(
       `${selected?.name ?? "Can"} — ${score.toFixed(2)} · ${move} #${after + 1}`,
     );
-  }, [drinks, flash, rate, ratings, selId, selected, vals]);
+  }, [canRate, drinks, flash, rate, ratings, selId, selected, vals]);
 
   const roulette = useCallback(() => {
     const unrated = drinks.filter((d) => !ratings[d.id]);
@@ -187,6 +197,8 @@ export function CansensusApp({
         onSubmit={submit}
         onRoulette={roulette}
         onAddCan={() => setSubmitOpen(true)}
+        canRate={canRate}
+        onSignIn={signInWithGoogle}
       />
       <StandingsSection
         drinks={drinks}

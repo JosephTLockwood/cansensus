@@ -18,6 +18,9 @@ type Props = {
   onSubmit: () => void;
   onRoulette: () => void;
   onAddCan: () => void;
+  /** False when signed out — rating requires an account. */
+  canRate: boolean;
+  onSignIn: () => Promise<{ error: string | null }>;
 };
 
 export function RateSection({
@@ -30,6 +33,8 @@ export function RateSection({
   onSubmit,
   onRoulette,
   onAddCan,
+  canRate,
+  onSignIn,
 }: Props) {
   const [query, setQuery] = useState("");
   const liveScore = compositeScore(vals);
@@ -175,9 +180,19 @@ export function RateSection({
                 marginTop: 24,
               }}
             >
-              <button type="button" className="btnPrimary" onClick={onSubmit}>
-                Submit rating &rarr;
-              </button>
+              {canRate ? (
+                <button type="button" className="btnPrimary" onClick={onSubmit}>
+                  Submit rating &rarr;
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btnPrimary"
+                  onClick={() => void onSignIn()}
+                >
+                  Sign in to rate &rarr;
+                </button>
+              )}
               <button type="button" className="btnGhost" onClick={onRoulette}>
                 Roulette
               </button>
@@ -185,7 +200,11 @@ export function RateSection({
                 className="mono"
                 style={{ fontSize: 11, color: "var(--dim)" }}
               >
-                {mine ? "Updates your existing rating" : "Adds a new rating"}
+                {!canRate
+                  ? "Ratings are tied to your account"
+                  : mine
+                    ? "Updates your existing rating"
+                    : "Adds a new rating"}
               </span>
             </div>
           </div>

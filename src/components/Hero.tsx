@@ -1,4 +1,5 @@
 import { SEASON, WEEK } from "@/lib/data";
+import { HeroFlow } from "./HeroFlow";
 
 type Props = {
   drinkCount: number;
@@ -9,6 +10,7 @@ type Props = {
 export function Hero({ drinkCount, brandCount, myCount }: Props) {
   return (
     <section className="hero">
+      <HeroFlow />
       <div className="wrap">
         <div className="heroKicker">
           <span className="heroKickerDot" aria-hidden="true" />

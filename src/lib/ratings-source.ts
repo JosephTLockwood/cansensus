@@ -38,8 +38,25 @@ function readAll(): Ratings {
 }
 
 /**
- * Anonymous, device-local ratings. Keeps the `edl.v1` key from the design
- * prototype so anything already stored in a browser still loads.
+ * Used while signed out. Rating requires an account, so there is nothing to
+ * read and nothing may be written.
+ *
+ * Note this is NOT the same as deleting the local store: `migrateLocalRatings`
+ * still reads localStorage directly at sign-in, so ratings made before rating
+ * was gated are moved into the account rather than lost.
+ */
+export const signedOutRatingsSource: RatingsSource = {
+  async load() {
+    return {};
+  },
+  async save() {
+    throw new Error("Sign in to rate a can.");
+  },
+};
+
+/**
+ * Device-local ratings. No longer used for live writes — rating is gated behind
+ * sign-in — but kept as the source `migrateLocalRatings` drains on first login.
  */
 export const localRatingsSource: RatingsSource = {
   async load() {
