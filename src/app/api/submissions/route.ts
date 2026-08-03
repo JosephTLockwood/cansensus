@@ -80,6 +80,44 @@ async function lookupBarcode(barcode: string) {
   }
 }
 
+const ACRONYMS = new Set(["ZOA", "NOS", "XL", "GT", "XS", "BPM", "TNT", "VPX"]);
+
+/** Same normalisation the importer applies — Open Food Facts casing is wild. */
+function titleCase(s: string) {
+  return s
+    .split(/\s+/)
+    .map((w) => {
+      if (w.length <= 1) return w.toUpperCase();
+      if (/^\d/.test(w) || /^[A-Z]\d/.test(w) || ACRONYMS.has(w)) return w;
+      const lower = w.toLowerCase();
+      return lower[0].toUpperCase() + lower.slice(1);
+    })
+    .join(" ");
+}
+
+/** OFF stores brands as a comma-separated list ("Monster, Monster Energy"). */
+function primaryBrand(raw: string) {
+  const first = raw.split(",")[0]?.trim() ?? raw;
+  return titleCase(first);
+}
+
+/** Prefix the brand when the product name doesn't already carry it. */
+function displayName(rawName: string, brand: string) {
+  let name = titleCase(
+    rawName
+      .replace(/\s+/g, " ")
+      .replace(/energy drink/gi, "")
+      .replace(/\bcaffeinated\b/gi, "")
+      .replace(/\bflavou?r\b/gi, "")
+      .trim(),
+  );
+  if (!name) name = brand;
+  const lower = name.toLowerCase();
+  const b = brand.toLowerCase();
+  if (lower.startsWith(b) || lower.startsWith(b.replace(/\s/g, ""))) return name;
+  return `${brand} ${name}`;
+}
+
 function parseMl(...candidates: unknown[]) {
   for (const raw of candidates) {
     if (!raw) continue;
@@ -165,11 +203,13 @@ export async function POST(request: Request) {
   if (off && offMl && offCaf && caffeinePlausible(offCaf, offMl)) {
     // Corroborated — trust Open Food Facts over the form.
     verified = true;
-    name =
+    const rawBrand = str(off.brands, 120) ?? str(body.brand, 80);
+    brand = rawBrand ? primaryBrand(rawBrand) : null;
+    const rawName =
       str(off.product_name_en, 120) ??
       str(off.product_name, 120) ??
       str(body.name, 120);
-    brand = str(off.brands, 80) ?? str(body.brand, 80);
+    name = rawName && brand ? displayName(rawName, brand) : rawName;
     ml = Math.round(offMl);
     caf = Math.round(offCaf);
     const s = nutriments?.["sugars_100g"];
@@ -186,8 +226,10 @@ export async function POST(request: Request) {
     imageSmallUrl = str(off.image_front_small_url, 400);
   } else {
     // Queued: use what the user typed, validated.
-    name = str(body.name, 120);
-    brand = str(body.brand, 80);
+    const rawBrand = str(body.brand, 80);
+    brand = rawBrand ? primaryBrand(rawBrand) : null;
+    const rawName = str(body.name, 120);
+    name = rawName && brand ? displayName(rawName, brand) : rawName;
     ml = num(body.ml);
     caf = num(body.caf);
     const s = num(body.sug);
