@@ -1,0 +1,7 @@
+# Supabase CLI project config.
+#   npx supabase link --project-ref ujuyfevyaokbvfmmpdeu
+#   npx supabase db push          # applies supabase/migrations/*
+project_id = "ujuyfevyaokbvfmmpdeu"
+
+[db]
+major_version = 15

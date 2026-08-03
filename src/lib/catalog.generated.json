@@ -24,24 +24,6 @@
       "nuke": 6
     },
     {
-      "id": "0611269113570",
-      "barcode": "0611269113570",
-      "name": "Red Bull The Yellow Edition Tropical",
-      "brand": "Red Bull",
-      "sub": "12 oz",
-      "ml": 355,
-      "caf": 114,
-      "sug": 38,
-      "cal": 56800,
-      "imageUrl": "https://images.openfoodfacts.org/images/products/061/126/911/3570/front_en.33.400.jpg",
-      "imageSmallUrl": "https://images.openfoodfacts.org/images/products/061/126/911/3570/front_en.33.200.jpg",
-      "source": "https://world.openfoodfacts.org/product/0611269113570",
-      "us": true,
-      "color": "#FF5B24",
-      "sweet": 96,
-      "nuke": 6
-    },
-    {
       "id": "0611269623727",
       "barcode": "0611269623727",
       "name": "Red Bull Zero",
@@ -55,7 +37,7 @@
       "imageSmallUrl": "https://images.openfoodfacts.org/images/products/061/126/962/3727/front_en.33.200.jpg",
       "source": "https://world.openfoodfacts.org/product/0611269623727",
       "us": true,
-      "color": "#3EE8FF",
+      "color": "#FF5B24",
       "sweet": 6,
       "nuke": 6
     },
@@ -73,9 +55,27 @@
       "imageSmallUrl": "https://images.openfoodfacts.org/images/products/061/126/900/1624/front_en.16.200.jpg",
       "source": "https://world.openfoodfacts.org/product/0611269001624",
       "us": true,
-      "color": "#B77BFF",
-      "sweet": 93,
+      "color": "#3EE8FF",
+      "sweet": 96,
       "nuke": 7
+    },
+    {
+      "id": "0611269001280",
+      "barcode": "0611269001280",
+      "name": "Red Bull The Amber Edition",
+      "brand": "Red Bull",
+      "sub": "8.5 oz",
+      "ml": 250,
+      "caf": 80,
+      "sug": 26,
+      "cal": 110,
+      "imageUrl": "https://images.openfoodfacts.org/images/products/061/126/900/1280/front_en.11.400.jpg",
+      "imageSmallUrl": "https://images.openfoodfacts.org/images/products/061/126/900/1280/front_en.11.200.jpg",
+      "source": "https://world.openfoodfacts.org/product/0611269001280",
+      "us": true,
+      "color": "#B77BFF",
+      "sweet": 96,
+      "nuke": 6
     },
     {
       "id": "5060947549487",
@@ -128,7 +128,7 @@
       "source": "https://world.openfoodfacts.org/product/5060335635266",
       "us": false,
       "color": "#6BFFA8",
-      "sweet": 93,
+      "sweet": 96,
       "nuke": 6
     },
     {
@@ -146,7 +146,7 @@
       "source": "https://world.openfoodfacts.org/product/5060517882976",
       "us": false,
       "color": "#FF8A3E",
-      "sweet": 78,
+      "sweet": 80,
       "nuke": 6
     },
     {
@@ -632,7 +632,7 @@
       "source": "https://world.openfoodfacts.org/product/5000382024255",
       "us": false,
       "color": "#3EE8FF",
-      "sweet": 41,
+      "sweet": 42,
       "nuke": 36
     },
     {

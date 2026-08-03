@@ -145,6 +145,24 @@ function caffeinePlausible(mg, ml) {
   return mg >= 40 && mg <= 400 && density <= 700; // shots
 }
 
+/**
+ * Sugar and calories get the same density sanity check as caffeine, because
+ * the same contributor error happens: Red Bull Yellow Edition came through
+ * claiming 56,800 kcal for a 355 ml can, which is kJ in a kcal field.
+ *
+ * Unlike caffeine these are not essential — a can with no calorie figure is
+ * still rankable — so an implausible value becomes null rather than dropping
+ * the whole product.
+ *
+ * Ceilings: a soft drink is at most ~20 g sugar per 100 ml, and sugar is 4 kcal
+ * per gram, so ~85 kcal per 100 ml is the physical limit.
+ */
+function sanitise(value, ml, maxPer100) {
+  if (value === null || value === undefined || !ml) return null;
+  if (value < 0) return null;
+  return (value / ml) * 100 > maxPer100 ? null : value;
+}
+
 /** Percentile, so a single bad row cannot flatten a whole axis. */
 function percentile(sorted, p) {
   if (!sorted.length) return 0;
@@ -232,8 +250,8 @@ async function main() {
         const caffeineMg = perCan(p.nutriments, "caffeine", ml, {
           gramsToMg: true,
         });
-        const sugarG = perCan(p.nutriments, "sugars", ml);
-        const kcal = perCan(p.nutriments, "energy-kcal", ml);
+        const sugarG = sanitise(perCan(p.nutriments, "sugars", ml), ml, 20);
+        const kcal = sanitise(perCan(p.nutriments, "energy-kcal", ml), ml, 85);
         return { p, ml, caffeineMg, sugarG, kcal, us: isUS(p) };
       })
       // A row without volume or caffeine can't be scored or compared, and
