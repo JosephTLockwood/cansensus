@@ -63,6 +63,9 @@ const runSql = (query) =>
 const FILES = [
   "supabase/migrations/0001_schema.sql",
   "supabase/migrations/0002_policies.sql",
+  "supabase/migrations/0003_can_photos.sql",
+  // seed.sql last: it restores the full 38-can Open Food Facts import, which is
+  // also the way back if the catalog is ever trimmed too far.
   "supabase/seed.sql",
 ];
 

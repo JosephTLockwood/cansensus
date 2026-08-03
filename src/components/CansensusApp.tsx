@@ -125,10 +125,14 @@ export function CansensusApp({
       before === after ? "holds at" : after < before ? "climbs to" : "drops to";
 
     rate(selId, rating);
+    // drink_stats is a server-side aggregate, so the new average only appears
+    // after a re-read. Without this the score sits stale until something else
+    // triggers a reload.
+    void reloadDrinks();
     flash(
       `${selected?.name ?? "Can"} — ${score.toFixed(2)} · ${move} #${after + 1}`,
     );
-  }, [canRate, drinks, flash, rate, ratings, selId, selected, vals]);
+  }, [canRate, drinks, flash, rate, ratings, reloadDrinks, selId, selected, vals]);
 
   const roulette = useCallback(() => {
     const unrated = drinks.filter((d) => !ratings[d.id]);

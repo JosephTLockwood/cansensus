@@ -40,6 +40,8 @@ type Body = {
   sug?: unknown;
   cal?: unknown;
   barcode?: unknown;
+  /** Storage path in the can-photos bucket, e.g. "<uid>/<uuid>.jpg". */
+  photoPath?: unknown;
 };
 
 const str = (v: unknown, max: number) =>
@@ -181,6 +183,25 @@ export async function POST(request: Request) {
 
   const barcode = str(body.barcode, 32)?.replace(/[^0-9]/g, "") || null;
 
+  // A photo is uploaded straight to storage by the browser (RLS confines it to
+  // the user's own folder), and only the path is sent here. Re-check ownership
+  // rather than trusting it: the path is client-supplied, and accepting an
+  // arbitrary one would let a submission claim someone else's image.
+  const rawPhoto = str(body.photoPath, 300);
+  let photoUrl: string | null = null;
+  if (rawPhoto) {
+    if (!rawPhoto.startsWith(`${user.id}/`)) {
+      return NextResponse.json(
+        { error: "That photo does not belong to you." },
+        { status: 403 },
+      );
+    }
+    const { data: pub } = supabase.storage
+      .from("can-photos")
+      .getPublicUrl(rawPhoto);
+    photoUrl = pub?.publicUrl ?? null;
+  }
+
   // --- try Open Food Facts first ---
   let off: Record<string, unknown> | null = null;
   if (barcode) off = await lookupBarcode(barcode);
@@ -286,6 +307,8 @@ export async function POST(request: Request) {
     image_url: imageUrl,
     image_small_url: imageSmallUrl,
     source: barcode ? `https://world.openfoodfacts.org/product/${barcode}` : null,
+    photo_url: photoUrl,
+    photo_by: photoUrl ? profile.id : null,
     us: true,
     status: "live",
     submitted_by: profile.id,

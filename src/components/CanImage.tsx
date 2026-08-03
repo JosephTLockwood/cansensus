@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Drink } from "@/lib/types";
 
 /**
@@ -13,8 +14,8 @@ import type { Drink } from "@/lib/types";
  * photos come back when submissions let people upload their own, which we can
  * license properly through submission terms.
  *
- * The URL stays in the data and the row detail still links to the Open Food
- * Facts product page, so nothing is lost by not rendering it.
+ * A user-uploaded `photoUrl` IS rendered, though: it was taken deliberately, of
+ * that can, for this purpose. That is the whole reason submissions accept one.
  */
 export function CanImage({
   drink,
@@ -23,6 +24,21 @@ export function CanImage({
   drink: Drink;
   variant: "panel" | "row";
 }) {
+  if (variant === "panel" && drink.photoUrl) {
+    return (
+      <div className="canPhoto">
+        <Image
+          src={drink.photoUrl}
+          alt={`${drink.name} can`}
+          width={240}
+          height={420}
+          className="canPhotoImg"
+          unoptimized
+        />
+      </div>
+    );
+  }
+
   if (variant === "row") {
     return (
       <span

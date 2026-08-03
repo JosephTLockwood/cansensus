@@ -34,8 +34,11 @@ export type Drink = {
   /** flavour-map y axis, 0-100, from caffeine density */
   nuke: number;
   color: string;
+  /** Open Food Facts image. Often a poor contributor snapshot — not rendered. */
   imageUrl: string;
   imageSmallUrl: string | null;
+  /** A photo someone uploaded of this can. Rendered in preference to imageUrl. */
+  photoUrl: string | null;
   /** link back to the Open Food Facts product page */
   source: string;
   /** true when the record is listed for the United States */

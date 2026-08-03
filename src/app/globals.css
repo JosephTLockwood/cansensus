@@ -1657,3 +1657,42 @@ input[type="range"]::-moz-range-thumb {
     animation: none !important;
   }
 }
+
+/* can photo upload */
+.photoRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.photoDrop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 18px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dim);
+  background: var(--ink);
+  border: 1px dashed var(--line-3);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.16s;
+}
+
+.photoDrop:hover {
+  border-color: var(--lime);
+  color: var(--lime);
+}
+
+.photoPreview {
+  width: 56px;
+  height: 76px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid var(--line-3);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 3px;
+}

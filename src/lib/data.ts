@@ -19,6 +19,7 @@ export const DRINKS: Drink[] = (catalog.drinks as RawDrink[]).map((d) => ({
   sug: d.sug ?? null,
   cal: d.cal ?? null,
   imageSmallUrl: d.imageSmallUrl ?? null,
+  photoUrl: null,
   price: null,
   crowd: null,
 }));

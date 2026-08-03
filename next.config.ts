@@ -13,6 +13,8 @@ const nextConfig: NextConfig = {
     // Kept for user-submitted can photos, which will come from Supabase Storage.
     remotePatterns: [
       { protocol: "https", hostname: "images.openfoodfacts.org" },
+      // user-uploaded can photos live in Supabase Storage
+      { protocol: "https", hostname: "ujuyfevyaokbvfmmpdeu.supabase.co" },
     ],
   },
 };

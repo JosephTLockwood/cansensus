@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { getSupabase } from "@/lib/supabase/client";
+import { uploadCanPhoto } from "@/lib/upload-photo";
 import { useAuthContext } from "./AuthProvider";
 
 /**
@@ -11,10 +12,14 @@ import { useAuthContext } from "./AuthProvider";
  * "one entry per person per can" enforceable, which is the only thing standing
  * between an unmoderated catalog and the same drink appearing five times.
  *
- * A barcode is optional. With one, the server pulls real nutrition and a photo
- * from Open Food Facts instead of trusting what was typed. Without one the can
- * still appears — that is the only route for store brands like Aldi's Gridlock
- * that no public database carries.
+ * A barcode is optional. With one, the server pulls real nutrition from Open
+ * Food Facts instead of trusting what was typed. Without one the can still
+ * appears — that is the only route for store brands like Aldi's Gridlock that no
+ * public database carries.
+ *
+ * A photo is uploaded straight to Supabase Storage from here, before the form is
+ * submitted, and only its path is sent on. Storage RLS confines a user to a
+ * folder named after their own id, and the route re-checks that prefix.
  */
 export function SubmitCanDialog({
   onClose,
@@ -34,6 +39,24 @@ export function SubmitCanDialog({
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** Local preview URL, plus the storage path once the upload finishes. */
+  const [photo, setPhoto] = useState<{ preview: string; path: string } | null>(
+    null,
+  );
+  const [uploading, setUploading] = useState(false);
+
+  const pickPhoto = async (file: File | undefined) => {
+    if (!file) return;
+    setError(null);
+    setUploading(true);
+    const result = await uploadCanPhoto(file);
+    setUploading(false);
+    if ("error" in result) {
+      setError(result.error);
+      return;
+    }
+    setPhoto({ preview: URL.createObjectURL(file), path: result.path });
+  };
 
   const set = (k: keyof typeof form) => (v: string) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -75,6 +98,7 @@ export function SubmitCanDialog({
           ml: ml ?? undefined,
           caf: form.caf || undefined,
           sug: form.sug || undefined,
+          photoPath: photo?.path,
         }),
       });
       const json = await res.json();
@@ -185,6 +209,47 @@ export function SubmitCanDialog({
               />
             </div>
 
+            <div className="field" style={{ flex: "1 1 100%" }}>
+              <span className="label" style={{ display: "block" }}>
+                Photo
+                <span style={{ color: "var(--faint)", letterSpacing: 0 }}>
+                  {" "}
+                  · optional, a shot of the can itself
+                </span>
+              </span>
+              <div className="photoRow">
+                {photo ? (
+                  <>
+                    {/* a local object URL, so next/image would add nothing */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={photo.preview}
+                      alt="Your can photo"
+                      className="photoPreview"
+                    />
+                    <button
+                      type="button"
+                      className="btnGhost"
+                      onClick={() => setPhoto(null)}
+                    >
+                      Remove
+                    </button>
+                  </>
+                ) : (
+                  <label className="photoDrop mono">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={(e) => void pickPhoto(e.target.files?.[0])}
+                      hidden
+                    />
+                    {uploading ? "Uploading…" : "Choose or take a photo"}
+                  </label>
+                )}
+              </div>
+            </div>
+
             {error && (
               <p
                 className="mono"
@@ -195,7 +260,11 @@ export function SubmitCanDialog({
             )}
 
             <div className="modalActions">
-              <button type="submit" className="btnPrimary" disabled={busy}>
+              <button
+                type="submit"
+                className="btnPrimary"
+                disabled={busy || uploading}
+              >
                 {busy ? "Checking…" : "Submit can →"}
               </button>
               <button type="button" className="btnGhost" onClick={onClose}>

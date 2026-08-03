@@ -17,23 +17,26 @@ export function compositeScore(v: Vals): number {
 }
 
 /**
- * The score shown for a drink.
+ * The score shown for a drink: the crowd average, straight from `drink_stats`.
  *
- * With no crowd data yet, this is simply your own rating — the table is a
- * personal league table until the backend lands. Once `crowd` is populated,
- * your rating is folded in with the pull of 12 crowd votes: enough that rating
- * a can visibly moves it, not enough to let one person rewrite the table.
+ * Your own rating is NOT added on top. It is already inside that average —
+ * drink_stats aggregates every rating including yours — so folding it in again
+ * counted one person's vote twice and inflated the score. The earlier
+ * "blend with the pull of 12 votes" only made sense while there was no backend
+ * and `crowd` was always null.
+ *
+ * `mine` is still the fallback, for the moment between submitting a rating and
+ * the refreshed aggregate arriving, and for the static first paint.
  */
 export function scoreFor(d: Drink, ratings: Ratings): number | null {
-  const mine = ratings[d.id];
-  const crowd = d.crowd;
-  if (!crowd) return mine ? mine.score : null;
-  if (!mine) return crowd.score;
-  return (crowd.score * crowd.votes + mine.score * 12) / (crowd.votes + 12);
+  if (d.crowd) return d.crowd.score;
+  return ratings[d.id]?.score ?? null;
 }
 
+/** Same rule: the aggregate already counts you. */
 export function votesFor(d: Drink, ratings: Ratings): number {
-  return (d.crowd?.votes ?? 0) + (ratings[d.id] ? 1 : 0);
+  if (d.crowd) return d.crowd.votes;
+  return ratings[d.id] ? 1 : 0;
 }
 
 /** Rated drinks first, best score down; unrated keep catalog order behind them. */

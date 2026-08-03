@@ -20,6 +20,7 @@ type DrinkRow = {
   color: string;
   image_url: string | null;
   image_small_url: string | null;
+  photo_url: string | null;
   source: string | null;
   us: boolean;
   price: number | string | null;
@@ -50,7 +51,7 @@ async function fetchLiveDrinks(): Promise<Drink[] | null> {
     supabase
       .from("drinks")
       .select(
-        "id,barcode,name,brand,sub,ml,caf,sug,cal,sweet,nuke,color,image_url,image_small_url,source,us,price",
+        "id,barcode,name,brand,sub,ml,caf,sug,cal,sweet,nuke,color,image_url,image_small_url,photo_url,source,us,price",
       )
       .eq("status", "live")
       .order("brand")
@@ -81,6 +82,7 @@ async function fetchLiveDrinks(): Promise<Drink[] | null> {
       color: r.color,
       imageUrl: r.image_url ?? "",
       imageSmallUrl: r.image_small_url,
+      photoUrl: r.photo_url,
       source: r.source ?? "",
       us: r.us,
       price: nOrNull(r.price),
