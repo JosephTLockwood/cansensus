@@ -15,6 +15,9 @@ export interface RatingsSource {
   load(): Promise<Ratings>;
   /** Insert or replace one rating. */
   save(drinkId: string, rating: Rating): Promise<void>;
+  /** Discard everything held here. Only the local source implements it — it is
+   *  called after pre-signup ratings have been migrated into an account. */
+  clear?(): void;
 }
 
 const STORAGE_KEY = "edl.v1";
@@ -50,6 +53,15 @@ export const localRatingsSource: RatingsSource = {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ mine: next }));
     } catch {
       // Private browsing / full quota — the in-memory state still updated.
+    }
+  },
+
+  clear() {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // nothing to do — the ratings are already safely in the account
     }
   },
 };

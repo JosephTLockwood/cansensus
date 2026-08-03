@@ -1,3 +1,5 @@
+import { AuthControls } from "./AuthControls";
+
 const LINKS = [
   ["#rate", "Rate"],
   ["#table", "Table"],
@@ -21,9 +23,7 @@ export function TopNav() {
           </a>
         ))}
       </nav>
-      <a href="#rate" className="navCta">
-        Cast a vote
-      </a>
+      <AuthControls />
     </header>
   );
 }

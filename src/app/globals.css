@@ -1290,3 +1290,120 @@ input[type="range"]::-moz-range-thumb {
   scrollbar-width: thin;
   scrollbar-color: var(--line-3) transparent;
 }
+
+/* ==========================================================================
+   Auth — nav controls and the handle picker
+   ========================================================================== */
+
+.navAuth {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+
+.navHandle {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--lime);
+  max-width: 22ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navSignOut {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: transparent;
+  color: var(--dim);
+  border: 1px solid var(--line-2);
+  border-radius: 99px;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: all 0.16s;
+}
+
+.navSignOut:hover {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+/* holds the nav's width steady while the session resolves */
+.navAuthPlaceholder {
+  font-size: 11px;
+  color: var(--faint);
+  padding: 8px 14px;
+  flex: none;
+}
+
+.modalScrim {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--gutter);
+  background: rgba(6, 7, 5, 0.86);
+  backdrop-filter: blur(6px);
+}
+
+.modalCard {
+  width: 100%;
+  max-width: 460px;
+  border: 1px solid var(--line-3);
+  border-radius: var(--radius);
+  padding: clamp(20px, 3vw, 30px);
+  background: linear-gradient(160deg, #14170f, var(--ink));
+  animation: edl-pop 0.2s ease-out;
+}
+
+.modalTitle {
+  font-size: clamp(28px, 3.4vw, 40px);
+  line-height: 0.94;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  margin: 0 0 12px;
+}
+
+.modalCopy {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--muted);
+  text-wrap: pretty;
+  margin: 0 0 22px;
+}
+
+.handleInput {
+  width: 100%;
+  padding: 13px 16px;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  background: var(--ink);
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+}
+
+.handleInput:focus {
+  outline: none;
+  border-color: var(--lime);
+}
+
+.handleStatus {
+  font-size: 11px;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.modalActions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}

@@ -3,6 +3,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DRINKS } from "@/lib/data";
 import { localRatingsSource, type RatingsSource } from "@/lib/ratings-source";
+import {
+  createSupabaseRatingsSource,
+  migrateLocalRatings,
+} from "@/lib/supabase-ratings-source";
+import { getSupabase } from "@/lib/supabase/client";
+import { useAuthContext } from "./AuthProvider";
 import { compositeScore, DEFAULT_VALS, fmtScore, ranked, scoreFor } from "@/lib/scoring";
 import type { SliderKey, Vals } from "@/lib/types";
 import { useRatings } from "@/lib/use-ratings";
@@ -26,11 +32,24 @@ const TOAST_MS = 2600;
  * sort, which row is expanded) stay inside their own components.
  */
 export function LeagueApp({
-  ratingsSource = localRatingsSource,
+  ratingsSource,
 }: {
+  /** Override for tests; normally chosen from the session below. */
   ratingsSource?: RatingsSource;
 }) {
-  const { ratings, rate } = useRatings(ratingsSource);
+  const { session, profile } = useAuthContext();
+  const userId = profile ? session?.user?.id : undefined;
+
+  // Signed in with a handle -> Postgres. Otherwise this device's localStorage,
+  // so an anonymous visitor can still rate cans and keep them.
+  const source = useMemo<RatingsSource>(() => {
+    if (ratingsSource) return ratingsSource;
+    const supabase = getSupabase();
+    if (supabase && userId) return createSupabaseRatingsSource(supabase, userId);
+    return localRatingsSource;
+  }, [ratingsSource, userId]);
+
+  const { ratings, rate, reload } = useRatings(source);
 
   const [selId, setSelId] = useState(DRINKS[0].id);
   const [vals, setVals] = useState<Vals>(DEFAULT_VALS);
@@ -50,6 +69,22 @@ export function LeagueApp({
     if (toastTimer.current) clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToast(""), TOAST_MS);
   }, []);
+
+  // Anyone who rated cans before accounts existed shouldn't lose them for
+  // having shown up early. Runs once per sign-in; server rows win on conflict.
+  const migrated = useRef(false);
+  useEffect(() => {
+    if (!userId || migrated.current) return;
+    migrated.current = true;
+    const handle = profile?.handle;
+    void migrateLocalRatings(source).then(async (moved) => {
+      if (moved === 0) return;
+      await reload();
+      flash(
+        `Moved ${moved} earlier rating${moved === 1 ? "" : "s"} into @${handle}`,
+      );
+    });
+  }, [flash, profile?.handle, reload, source, userId]);
 
   /** Load a can into the form, pre-filled with your previous scores if any. */
   const select = useCallback(

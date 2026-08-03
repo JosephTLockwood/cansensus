@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, Archivo_Black, JetBrains_Mono } from "next/font/google";
+import { AuthProvider } from "@/components/AuthProvider";
 import { TopNav } from "@/components/TopNav";
 import "./globals.css";
 
@@ -42,8 +43,10 @@ export default function RootLayout({
       className={`${archivo.variable} ${archivoBlack.variable} ${jetBrainsMono.variable}`}
     >
       <body>
-        <TopNav />
-        {children}
+        <AuthProvider>
+          <TopNav />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

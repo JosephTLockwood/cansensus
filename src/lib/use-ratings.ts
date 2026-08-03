@@ -15,18 +15,29 @@ import type { Rating, Ratings } from "./types";
  */
 export function useRatings(source: RatingsSource = localRatingsSource) {
   const [ratings, setRatings] = useState<Ratings>({});
-  const [loaded, setLoaded] = useState(false);
+  /** Which source the current `ratings` came from. */
+  const [loadedFrom, setLoadedFrom] = useState<RatingsSource | null>(null);
+
+  // Derived rather than a second piece of state, so swapping source (signing
+  // in) reports "not loaded" without setting state during the effect body.
+  const loaded = loadedFrom === source;
 
   useEffect(() => {
     let active = true;
     void source.load().then((loadedRatings) => {
       if (!active) return;
       setRatings(loadedRatings);
-      setLoaded(true);
+      setLoadedFrom(source);
     });
     return () => {
       active = false;
     };
+  }, [source]);
+
+  /** Re-read from the source — used after migrating pre-signup ratings. */
+  const reload = useCallback(async () => {
+    const fresh = await source.load();
+    setRatings(fresh);
   }, [source]);
 
   const rate = useCallback(
@@ -37,5 +48,5 @@ export function useRatings(source: RatingsSource = localRatingsSource) {
     [source],
   );
 
-  return { ratings, loaded, rate };
+  return { ratings, loaded, rate, reload };
 }
