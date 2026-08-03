@@ -22,9 +22,9 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Energy League — the definitive energy drink league table",
+  title: "Cansensus — the crowd-sourced energy drink ranking",
   description:
-    "A crowd-sourced scoreboard for energy drinks. Rate cans on taste, kick, aftertaste and value, then see how the crowd ranks them against what is actually in the can.",
+    "Crowd-sourced rankings for energy drinks. Rate cans on taste, kick, aftertaste and value, and see how the crowd scores them against what is actually in the can.",
 };
 
 export const viewport: Viewport = {

@@ -17,20 +17,22 @@ export function Hero({ drinkCount, brandCount, myCount }: Props) {
           </span>
         </div>
 
+        {/* Two lines, not three: "The crowd-sourced" measured 11.77em wide
+            against the old "The definitive" at 7.96em, so a three-line version
+            wrapped mid-phrase at every width below 1440px. Two lines let the
+            type get bigger AND hold their shape from 390px up. */}
         <h1 className="heroTitle">
-          The definitive
+          Energy drink
           <br />
-          energy drink
-          <br />
-          <span style={{ color: "var(--lime)" }}>league table</span>
+          <span style={{ color: "var(--lime)" }}>cansensus</span>
         </h1>
 
         <div className="heroBottom">
           <p className="heroCopy">
             Everyone drinks them. Nobody agrees. Rate the cans you have actually
-            tasted, and the crowd sorts out the truth — scored on taste, kick,
-            aftertaste and value, then cross-referenced against the real
-            nutrition panel.
+            tasted and the crowd works out the truth — scored on taste, kick,
+            aftertaste and value, then checked against the real nutrition panel.
+            Missing a can? Add it.
           </p>
 
           <div className="heroStats">

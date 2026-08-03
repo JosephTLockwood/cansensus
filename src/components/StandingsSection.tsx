@@ -385,7 +385,7 @@ function RowDetail({
           </svg>
         ) : (
           <p className="emptyNote">
-            Form needs weekly snapshots. The first line appears after the league
+            Form needs weekly snapshots. The first line appears after Cansensus
             has been running a week.
           </p>
         )}

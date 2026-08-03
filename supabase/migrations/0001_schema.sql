@@ -1,4 +1,4 @@
--- Energy League — initial schema
+-- Cansensus — initial schema
 --
 -- Design notes that matter:
 --

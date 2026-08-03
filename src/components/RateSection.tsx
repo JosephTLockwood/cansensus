@@ -8,7 +8,7 @@ import { CanImage } from "./CanImage";
 import { SectionHeader } from "./SectionHeader";
 
 type Props = {
-  /** Chips are shown in current league order. */
+  /** Chips are shown in current ranking order. */
   chipOrder: Drink[];
   selected: Drink;
   ratings: Ratings;
@@ -120,7 +120,7 @@ export function RateSection({
                 <p className="emptyNote">
                   Nothing matches “{query}”.{" "}
                   <button type="button" className="addCanLink mono" onClick={onAddCan}>
-                    Add it to the league →
+                    Add it to the catalog →
                   </button>
                 </p>
               )}
@@ -247,7 +247,7 @@ export function RateSection({
                   }}
                 >
                   <div className="kv">
-                    <span>{selected.crowd ? "Crowd score" : "League score"}</span>
+                    <span>{selected.crowd ? "Crowd score" : "Your score"}</span>
                     <span style={{ color: "var(--lime)", fontWeight: 700 }}>
                       {fmtScore(scoreFor(selected, ratings))}
                     </span>

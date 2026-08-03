@@ -30,7 +30,7 @@ export function FlavourMap({ drinks, ratings, hoverId, onHover }: Props) {
         <SectionHeader num="04" title="Flavour map" />
         <p className="lede">
           Sugar across, caffeine intensity up &mdash; both from the nutrition
-          panel, not opinion. Dot size is its league score once rated. Hover for
+          panel, not opinion. Dot size is its score once rated. Hover for
           the read-out.
         </p>
 

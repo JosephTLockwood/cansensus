@@ -25,7 +25,7 @@ const CACHE_DIR = join(ROOT, ".cache", "off");
 const OUT_FILE = join(ROOT, "src", "lib", "catalog.generated.json");
 const FRESH = process.argv.includes("--fresh");
 
-const UA = "EnergyLeague/0.1 (https://github.com/JosephTLockwood/energy-league)";
+const UA = "Cansensus/0.1 (https://github.com/JosephTLockwood/cansensus)";
 const API = "https://world.openfoodfacts.org/api/v2/search";
 
 /**

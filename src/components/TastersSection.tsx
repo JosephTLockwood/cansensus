@@ -16,7 +16,7 @@ export function TastersSection({ drinks, ratings }: { drinks: Drink[]; ratings: 
     { label: "First sip", on: myCount >= 1, at: 1 },
     { label: "Five cans deep", on: myCount >= 5, at: 5 },
     { label: "Ten deep", on: myCount >= 10, at: 10 },
-    { label: "Half the league", on: myCount >= Math.floor(drinks.length / 2), at: Math.floor(drinks.length / 2) },
+    { label: "Half the catalog", on: myCount >= Math.floor(drinks.length / 2), at: Math.floor(drinks.length / 2) },
     { label: "Completionist", on: myCount >= drinks.length, at: drinks.length },
   ];
   const next = badges.find((b) => !b.on);
@@ -99,7 +99,7 @@ export function TastersSection({ drinks, ratings }: { drinks: Drink[]; ratings: 
               <ul className="pendingList">
                 <li>
                   <strong>Google sign-in</strong> — with a username you choose,
-                  so your real name never appears on the league.
+                  so your real name never appears anywhere on the site.
                 </li>
                 <li>
                   <strong>Most cans logged</strong> — a real leaderboard, once

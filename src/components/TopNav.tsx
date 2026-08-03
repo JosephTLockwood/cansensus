@@ -14,7 +14,7 @@ export function TopNav() {
     <header className="nav">
       <div className="navBrand">
         <span className="navBrandDot" aria-hidden="true" />
-        <span className="navBrandName">ENERGY LEAGUE</span>
+        <span className="navBrandName">CANSENSUS</span>
       </div>
       <nav className="navLinks" aria-label="Sections">
         {LINKS.map(([href, label]) => (

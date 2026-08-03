@@ -14,7 +14,7 @@ export function LabSection({ drinks, ratings }: { drinks: Drink[]; ratings: Rati
       <div className="wrap">
         <SectionHeader num="05" title="The lab" />
         <p className="lede">
-          What the nutrition panel says about the league, and what your own
+          What the nutrition panel says about the catalog, and what your own
           ratings say back. Price-based analysis is missing on purpose &mdash;
           Open Food Facts carries no prices, so mg-per-dollar has no honest
           source until people submit them.
@@ -92,7 +92,7 @@ export function LabSection({ drinks, ratings }: { drinks: Drink[]; ratings: Rati
  *
  * Two of these describe the catalog itself (sugar and caffeine distribution)
  * and work today. Anything that needs a score falls back to describing the
- * shape of the league rather than inventing a correlation, and the Value card
+ * shape of the catalog rather than inventing a correlation, and the Value card
  * needs prices, which Open Food Facts does not carry at all.
  */
 function buildCards(drinks: Drink[], ratings: Ratings): LabCard[] {
@@ -128,7 +128,7 @@ function buildCards(drinks: Drink[], ratings: Ratings): LabCard[] {
   });
   const biggestBand = [...bands].sort((a, b) => b.n - a.n)[0];
   const maxBand = Math.max(...bands.map((b) => b.n), 1);
-  const caffeineVerdict = `The league clusters in the ${biggestBand.label.toLowerCase()} band (${biggestBand.n} of ${drinks.length} cans). Whether more milligrams means more points needs ratings across every band.`;
+  const caffeineVerdict = `The catalog clusters in the ${biggestBand.label.toLowerCase()} band (${biggestBand.n} of ${drinks.length} cans). Whether more milligrams means more points needs ratings across every band.`;
 
   const cards: LabCard[] = [
     {

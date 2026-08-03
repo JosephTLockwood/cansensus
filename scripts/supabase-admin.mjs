@@ -89,7 +89,7 @@ async function enableGoogle() {
     console.error("Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.");
     process.exit(1);
   }
-  const siteUrl = process.env.SITE_URL ?? "https://energy-league.vercel.app";
+  const siteUrl = process.env.SITE_URL ?? "https://cansensus.vercel.app";
   await api(`/projects/${REF}/config/auth`, {
     method: "PATCH",
     body: {
@@ -101,8 +101,8 @@ async function enableGoogle() {
       uri_allow_list: [
         siteUrl,
         `${siteUrl}/`,
-        "https://josephtlockwood.github.io/energy-league",
-        "https://josephtlockwood.github.io/energy-league/",
+        "https://josephtlockwood.github.io/cansensus",
+        "https://josephtlockwood.github.io/cansensus/",
         "http://localhost:3000",
         "http://localhost:3000/",
       ].join(","),

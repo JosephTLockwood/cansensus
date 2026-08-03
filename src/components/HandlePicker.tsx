@@ -74,7 +74,7 @@ export function HandlePicker({
           Pick a handle
         </h2>
         <p className="modalCopy">
-          This is the only name the league ever shows. Your Google name and email
+          This is the only name Cansensus ever shows. Your Google name and email
           stay private — they are never copied anywhere other people can read.
         </p>
 

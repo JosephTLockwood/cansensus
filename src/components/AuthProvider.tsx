@@ -7,7 +7,7 @@ import { HandlePicker } from "./HandlePicker";
 /**
  * One auth state for the whole page.
  *
- * The nav needs it (sign in / sign out) and the league needs it (which ratings
+ * The nav needs it (sign in / sign out) and the catalog needs it (which ratings
  * source to use). Calling useAuth() in both places would create two independent
  * sessions that could disagree, so it lives in a context.
  */
@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider value={auth}>
       {children}
       {/* Signed in with Google but no public identity yet — block until they
-          have chosen the name the league will show. */}
+          have chosen the name Cansensus will show. */}
       {auth.needsHandle && (
         <HandlePicker
           onClaim={auth.claimHandle}

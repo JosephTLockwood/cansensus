@@ -1,5 +1,5 @@
-import { LeagueApp } from "@/components/LeagueApp";
+import { CansensusApp } from "@/components/CansensusApp";
 
 export default function Home() {
-  return <LeagueApp />;
+  return <CansensusApp />;
 }

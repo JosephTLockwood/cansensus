@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Energy League — design tokens + structural styles
+   Cansensus — design tokens + structural styles
    Palette and type scale are ported 1:1 from the Claude Design source.
    Rule of thumb: static layout lives here, per-datum values stay inline.
    ========================================================================== */
@@ -44,11 +44,12 @@
   --radius: 20px;
   --nav-h: 52px;
 
-  /* Hero headline. The three design-intended lines only hold while the font
-     size stays under (container width / 8.3) — "The definitive" is the widest
-     line at 7.96em, and past that it wraps mid-phrase into five lines. The
-     108px cap is what keeps the whole header inside the first viewport. */
-  --hero-fs: clamp(42px, 9vw, 108px);
+  /* Hero headline. Two lines, whose widest ("Energy drink") measures 8.07em,
+     so they hold as long as the font stays under container-width / 8.4. At
+     1440px the container is 1320px, giving a 157px ceiling; 132px is chosen for
+     looks and to keep the whole header inside the first viewport. Measured in
+     Chromium — see scripts note in the commit history before changing it. */
+  --hero-fs: clamp(42px, 11vw, 132px);
 }
 
 *,

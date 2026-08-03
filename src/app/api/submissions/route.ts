@@ -4,25 +4,27 @@ import { NextResponse } from "next/server";
 /**
  * Submit a can that isn't in the catalog.
  *
- * Why this is a server route rather than a direct insert from the browser:
- * deciding whether a submission goes live or into the queue depends on whether
- * Open Food Facts corroborates it, and that decision has to be made somewhere
- * the submitter cannot influence. A browser insert could set status itself, so
- * `drinks` has no client INSERT policy at all — this route holds the secret key
- * and is the only way in.
+ * Why this is a server route rather than a direct insert from the browser: the
+ * Open Food Facts lookup and every validation below have to happen somewhere the
+ * submitter cannot skip them. `drinks` has no client INSERT policy at all — this
+ * route holds the secret key and is the only way in.
  *
- * Flow:
- *   barcode given  -> look it up in Open Food Facts
- *     found + plausible -> live immediately, with OFF's nutrition and photo
- *     not found         -> queued with the user's own figures
- *   no barcode     -> queued
+ * Anything a signed-in user submits goes live immediately — there is no review
+ * queue. Being signed in is the only gate.
  *
- * Everything the user typed is re-validated here. The same caffeine bounds the
- * importer applies are enforced, because a submission is just another untrusted
- * source of health information.
+ * That puts all the weight on validation, which happens here and cannot be
+ * skipped by the client: the same caffeine plausibility bounds as the importer,
+ * plus a duplicate check against the whole catalog rather than just the
+ * submitter's own rows. With no moderator to catch it, "Monster Ultra" arriving
+ * a fourth time under a slightly different spelling is the likeliest way the
+ * catalog rots.
+ *
+ * A barcode still helps: it lets Open Food Facts supply real nutrition and a
+ * photo instead of the submitter's typing. It just no longer decides whether
+ * the can appears.
  */
 
-const OFF_UA = "EnergyLeague/0.1 (https://github.com/JosephTLockwood/energy-league)";
+const OFF_UA = "Cansensus/0.1 (https://github.com/JosephTLockwood/cansensus)";
 
 const PALETTE = [
   "#D8FF3E", "#FF5B24", "#3EE8FF", "#B77BFF", "#FFC53E", "#FF4D8D",
@@ -285,7 +287,7 @@ export async function POST(request: Request) {
     image_small_url: imageSmallUrl,
     source: barcode ? `https://world.openfoodfacts.org/product/${barcode}` : null,
     us: true,
-    status: verified ? "live" : "pending",
+    status: "live",
     submitted_by: profile.id,
   };
 
@@ -298,6 +300,28 @@ export async function POST(request: Request) {
   // up near-identical queue entries.
   const norm = (v: string) => v.toLowerCase().replace(/[^a-z0-9]/g, "");
   const dedupeKey = norm(`${brand}${name}`);
+
+  // With no moderator in the loop, the same can arriving under a slightly
+  // different spelling is the main way the catalog degrades. Check the whole
+  // live catalog, not just this submitter's rows, before adding anything.
+  if (!barcode) {
+    const { data: allLive } = await supabase
+      .from("drinks")
+      .select("id, name, brand")
+      .eq("status", "live");
+
+    const clash = (allLive ?? []).find(
+      (d) => norm(`${d.brand}${d.name}`) === dedupeKey,
+    );
+    if (clash) {
+      return NextResponse.json(
+        {
+          error: `${clash.name} is already in the catalog. Search for it instead of adding it again.`,
+        },
+        { status: 409 },
+      );
+    }
+  }
 
   const { data: existing } = barcode
     ? await supabase
@@ -320,7 +344,7 @@ export async function POST(request: Request) {
   if (existing) {
     if (existing.status === "live") {
       return NextResponse.json(
-        { error: "That can is already in the league." },
+        { error: "That can is already in the catalog." },
         { status: 409 },
       );
     }
@@ -349,9 +373,7 @@ export async function POST(request: Request) {
       name: row.name,
       verified,
       updated: true,
-      message: verified
-        ? `${row.name} verified and added to the league.`
-        : `Updated your earlier submission of ${row.name}.`,
+      message: `Updated your earlier entry for ${row.name}.`,
     });
   }
 
@@ -364,7 +386,7 @@ export async function POST(request: Request) {
   if (error) {
     if (error.code === "23505") {
       return NextResponse.json(
-        { error: "That can is already in the league." },
+        { error: "That can is already in the catalog." },
         { status: 409 },
       );
     }
@@ -378,7 +400,7 @@ export async function POST(request: Request) {
     verified,
     updated: false,
     message: verified
-      ? `${row.name} verified against Open Food Facts and added to the league.`
-      : `${row.name} submitted for review.`,
+      ? `${row.name} added — nutrition verified against Open Food Facts.`
+      : `${row.name} added to the catalog.`,
   });
 }

@@ -28,7 +28,7 @@ export function TrendsSection({ drinks, ratings }: { drinks: Drink[]; ratings: R
         <SectionHeader num="03" title="Form guide" />
         <p className="lede">
           {hasHistory
-            ? "Week-over-week movement across the league."
+            ? "Week-over-week movement across the catalog."
             : "Risers, fallers and the most divisive cans need week-over-week crowd history. Nothing has been snapshotted yet, so here is what the nutrition panel can tell you instead."}
         </p>
 

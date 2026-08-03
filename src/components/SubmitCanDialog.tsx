@@ -5,16 +5,16 @@ import { getSupabase } from "@/lib/supabase/client";
 import { useAuthContext } from "./AuthProvider";
 
 /**
- * Add a can the league doesn't have.
+ * Add a can the catalog doesn't have.
  *
  * Signing in is required, and not just for attribution: an account is what makes
- * "one submission per person per can" enforceable. Without it the queue fills
- * with the same can over and over.
+ * "one entry per person per can" enforceable, which is the only thing standing
+ * between an unmoderated catalog and the same drink appearing five times.
  *
- * A barcode is optional but strongly encouraged — with one, the server can
- * corroborate against Open Food Facts and the can goes live immediately with
- * sourced nutrition. Without one it goes to the review queue, which is the only
- * route for store brands like Aldi's Gridlock that no public database carries.
+ * A barcode is optional. With one, the server pulls real nutrition and a photo
+ * from Open Food Facts instead of trusting what was typed. Without one the can
+ * still appears — that is the only route for store brands like Aldi's Gridlock
+ * that no public database carries.
  */
 export function SubmitCanDialog({
   onClose,
@@ -109,9 +109,9 @@ export function SubmitCanDialog({
         {!signedIn ? (
           <>
             <p className="modalCopy">
-              Adding a can needs an account. That is how the league keeps one
-              submission per person per can instead of the same drink appearing
-              five times.
+              Adding a can needs an account. That is how Cansensus keeps one
+              entry per person per can instead of the same drink appearing five
+              times.
             </p>
             <div className="modalActions">
               <button type="button" className="btnGhost" onClick={onClose}>
@@ -122,9 +122,9 @@ export function SubmitCanDialog({
         ) : (
           <>
             <p className="modalCopy">
-              With a barcode we check it against Open Food Facts and it goes live
-              straight away with real nutrition. Without one it goes to the
-              review queue — which is the only way in for store brands.
+              It appears straight away. With a barcode we pull real nutrition
+              from Open Food Facts instead of trusting your typing — without one
+              we use your figures, which is the only way in for store brands.
             </p>
 
             <Field
@@ -206,8 +206,8 @@ export function SubmitCanDialog({
               className="mono"
               style={{ fontSize: 10, color: "var(--faint)", marginTop: 12 }}
             >
-              Submitting again updates your earlier entry rather than adding a
-              duplicate.
+              Submitting the same can again updates your earlier entry instead
+              of adding a duplicate.
             </p>
           </>
         )}

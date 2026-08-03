@@ -1,4 +1,4 @@
-# Energy League
+# Cansensus
 
 A crowd-sourced league table for energy drinks. Rate the cans you have actually
 tasted on taste, kick, aftertaste and value; the crowd sorts out the truth, and
@@ -80,7 +80,7 @@ touches no component.
 
 ## Deployment
 
-**Live: https://energy-league.vercel.app**
+**Live: https://cansensus.vercel.app**
 
 Two targets, both configured in `next.config.ts`, and both fire on a push to
 `main`:
@@ -88,9 +88,9 @@ Two targets, both configured in `next.config.ts`, and both fire on a push to
 - **Vercel** (default, primary) — a normal server build, deployed by the Vercel
   GitHub integration. This is the target for phase 2, since API routes and auth
   need a server.
-- **GitHub Pages** (secondary mirror, https://josephtlockwood.github.io/energy-league/)
+- **GitHub Pages** (secondary mirror, https://josephtlockwood.github.io/cansensus/)
   — `DEPLOY_TARGET=gh-pages npm run build` emits a static `out/` under the
-  `/energy-league` base path, deployed by `.github/workflows/deploy.yml`. This
+  `/cansensus` base path, deployed by `.github/workflows/deploy.yml`. This
   works only while all state is client-side. **Delete that workflow when the
   first route handler lands**, or Pages will start serving a silently broken
   build.
@@ -106,7 +106,7 @@ Two targets, both configured in `next.config.ts`, and both fire on a push to
 
 ## Credits
 
-Design and copy from the `Energy League.dc.html` Claude Design project —
+Design and copy from the `Cansensus.dc.html` Claude Design project —
 [277b0286-11d2-438b-9e4c-e19f6c98ee5e](https://claude.ai/design/p/277b0286-11d2-438b-9e4c-e19f6c98ee5e),
 the source to re-read if the design changes upstream.
 Fonts: Archivo, Archivo Black, JetBrains Mono, self-hosted via `next/font`.

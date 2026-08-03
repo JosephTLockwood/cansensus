@@ -32,7 +32,7 @@ const TOAST_MS = 2600;
  * into the form, and the current form values. Section-local concerns (table
  * sort, which row is expanded) stay inside their own components.
  */
-export function LeagueApp({
+export function CansensusApp({
   ratingsSource,
 }: {
   /** Override for tests; normally chosen from the session below. */
@@ -152,7 +152,7 @@ export function LeagueApp({
     const scored = order.filter((d) => scoreFor(d, ratings) !== null);
     if (!scored.length) {
       return (
-        `${drinks.length} cans in the league  •  real caffeine + sugar from ` +
+        `${drinks.length} cans in the catalog  •  real caffeine + sugar from ` +
         `Open Food Facts  •  rate one to start the table  •  `
       );
     }
