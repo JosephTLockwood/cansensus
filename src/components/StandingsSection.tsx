@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { COLS, DRINKS, FILTERS, SLIDER_DEFS, tagsFor } from "@/lib/data";
+import { COLS, FILTERS, SLIDER_DEFS, tagsFor } from "@/lib/data";
 import {
   caffeineDensity,
   fmtScore,
@@ -17,23 +17,24 @@ import { CanImage } from "./CanImage";
 import { SectionHeader } from "./SectionHeader";
 
 type Props = {
+  drinks: Drink[];
   ratings: Ratings;
   /** Loads a can into the rate form and scrolls the user back up to it. */
   onRateThis: (id: string) => void;
 };
 
-export function StandingsSection({ ratings, onRateThis }: Props) {
+export function StandingsSection({ drinks, ratings, onRateThis }: Props) {
   const [sortKey, setSortKey] = useState<SortKey>("rank");
   const [sortDir, setSortDir] = useState<1 | -1>(1);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
 
-  const rankOf = useMemo(() => rankMap(ratings), [ratings]);
-  const prevRank = useMemo(() => prevRankMap(), []);
+  const rankOf = useMemo(() => rankMap(drinks, ratings), [drinks, ratings]);
+  const prevRank = useMemo(() => prevRankMap(drinks), [drinks]);
   const ratedCount = Object.keys(ratings).length;
 
   const rows = useMemo(() => {
-    const filtered = DRINKS.filter((d) =>
+    const filtered = drinks.filter((d) =>
       activeFilters.every((key) => {
         const f = FILTERS.find((x) => x.key === key);
         return f ? f.test(d, ratings) : true;
@@ -66,7 +67,7 @@ export function StandingsSection({ ratings, onRateThis }: Props) {
           : (y as number) - (x as number);
       return cmp * sortDir;
     });
-  }, [activeFilters, prevRank, rankOf, ratings, sortDir, sortKey]);
+  }, [activeFilters, drinks, prevRank, rankOf, ratings, sortDir, sortKey]);
 
   const toggleSort = (key: SortKey) => {
     if (key === sortKey) setSortDir((d) => (d === 1 ? -1 : 1));
@@ -90,7 +91,7 @@ export function StandingsSection({ ratings, onRateThis }: Props) {
         <p className="lede" style={{ margin: "12px 0 0" }}>
           {ratedCount === 0
             ? "Nobody has rated anything yet, so there is no table to show. Rate a can and it appears here — this becomes the crowd table once sign-in and the database land."
-            : `Ranked by your ratings. ${ratedCount} of ${DRINKS.length} cans rated — unrated cans sit below the line.`}
+            : `Ranked by your ratings. ${ratedCount} of ${drinks.length} cans rated — unrated cans sit below the line.`}
         </p>
 
         <div
@@ -125,7 +126,7 @@ export function StandingsSection({ ratings, onRateThis }: Props) {
             className="mono"
             style={{ fontSize: 11, color: "var(--dim)", marginLeft: "auto" }}
           >
-            {rows.length} of {DRINKS.length} cans · sorted by {sortedLabel}
+            {rows.length} of {drinks.length} cans · sorted by {sortedLabel}
           </span>
         </div>
 

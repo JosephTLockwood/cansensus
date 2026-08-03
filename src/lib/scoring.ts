@@ -1,4 +1,4 @@
-import { DRINKS, SLIDER_DEFS } from "./data";
+import { SLIDER_DEFS } from "./data";
 import type { Drink, Ratings, Vals } from "./types";
 
 /**
@@ -51,11 +51,17 @@ export function ranked(list: Drink[], ratings: Ratings): Drink[] {
 /**
  * id -> league position, 1-based. Only scored drinks get a position; unrated
  * ones are absent, so the table shows "—" instead of implying a ranking.
+ *
+ * Takes the drink list rather than importing it: the catalog is live now, so a
+ * module-level constant would silently ignore submitted cans.
  */
-export function rankMap(ratings: Ratings): Record<string, number> {
+export function rankMap(
+  drinks: Drink[],
+  ratings: Ratings,
+): Record<string, number> {
   const out: Record<string, number> = {};
   let position = 0;
-  for (const d of ranked(DRINKS, ratings)) {
+  for (const d of ranked(drinks, ratings)) {
     if (scoreFor(d, ratings) === null) continue;
     out[d.id] = ++position;
   }
@@ -63,10 +69,10 @@ export function rankMap(ratings: Ratings): Record<string, number> {
 }
 
 /** id -> position at the last weekly snapshot. Empty until snapshots exist. */
-export function prevRankMap(): Record<string, number> {
-  const withHistory = DRINKS.filter((d) => d.crowd?.prevScore != null);
+export function prevRankMap(drinks: Drink[]): Record<string, number> {
   const out: Record<string, number> = {};
-  withHistory
+  drinks
+    .filter((d) => d.crowd?.prevScore != null)
     .sort((a, b) => (b.crowd!.prevScore ?? 0) - (a.crowd!.prevScore ?? 0))
     .forEach((d, i) => {
       out[d.id] = i + 1;

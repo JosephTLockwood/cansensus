@@ -1,6 +1,5 @@
-import { DRINKS } from "@/lib/data";
 import { averageOf, caffeineDensity } from "@/lib/scoring";
-import type { Ratings } from "@/lib/types";
+import type { Drink, Ratings } from "@/lib/types";
 import { SectionHeader } from "./SectionHeader";
 
 /**
@@ -9,16 +8,16 @@ import { SectionHeader } from "./SectionHeader";
  * for a "taste twin" — a match percentage computed against people who do not
  * exist. That is gone until sign-in lands; what remains is genuinely yours.
  */
-export function TastersSection({ ratings }: { ratings: Ratings }) {
-  const rated = DRINKS.filter((d) => ratings[d.id]);
+export function TastersSection({ drinks, ratings }: { drinks: Drink[]; ratings: Ratings }) {
+  const rated = drinks.filter((d) => ratings[d.id]);
   const myCount = rated.length;
 
   const badges = [
     { label: "First sip", on: myCount >= 1, at: 1 },
     { label: "Five cans deep", on: myCount >= 5, at: 5 },
     { label: "Ten deep", on: myCount >= 10, at: 10 },
-    { label: "Half the league", on: myCount >= Math.floor(DRINKS.length / 2), at: Math.floor(DRINKS.length / 2) },
-    { label: "Completionist", on: myCount >= DRINKS.length, at: DRINKS.length },
+    { label: "Half the league", on: myCount >= Math.floor(drinks.length / 2), at: Math.floor(drinks.length / 2) },
+    { label: "Completionist", on: myCount >= drinks.length, at: drinks.length },
   ];
   const next = badges.find((b) => !b.on);
 
@@ -47,7 +46,7 @@ export function TastersSection({ ratings }: { ratings: Ratings }) {
             <div className="youStat">
               <span className="display youStatValue">{myCount}</span>
               <span className="youStatLabel">
-                of {DRINKS.length} cans rated
+                of {drinks.length} cans rated
               </span>
             </div>
 
@@ -59,7 +58,7 @@ export function TastersSection({ ratings }: { ratings: Ratings }) {
                 className="barFill"
                 style={{
                   background: "var(--lime)",
-                  width: `${Math.round((myCount / DRINKS.length) * 100)}%`,
+                  width: `${Math.round((myCount / drinks.length) * 100)}%`,
                 }}
               />
             </div>

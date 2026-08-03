@@ -1,33 +1,20 @@
 import type { NextConfig } from "next";
 
 /**
- * Two deploy targets:
+ * Vercel only.
  *
- *  - Vercel (default) — a normal server build. This is the target that matters
- *    once phase 2 lands, because API routes and auth need a server.
- *  - GitHub Pages — set DEPLOY_TARGET=gh-pages to emit a fully static `out/`
- *    under the /energy-league sub-path. Works today because every bit of state
- *    is client-side; it stops being viable the moment a route handler is added,
- *    which is exactly when Vercel takes over.
+ * The GitHub Pages mirror is gone: /api/submissions is a route handler, and
+ * `output: "export"` cannot build one. Keeping the workflow would have produced
+ * a static site that looked fine and silently failed every submission — the
+ * worst failure mode, because nothing turns red.
  */
-const isGitHubPages = process.env.DEPLOY_TARGET === "gh-pages";
-const repo = "/energy-league";
-
 const nextConfig: NextConfig = {
   images: {
-    // Can photographs are served from Open Food Facts (CC BY-SA 3.0).
+    // Kept for user-submitted can photos, which will come from Supabase Storage.
     remotePatterns: [
       { protocol: "https", hostname: "images.openfoodfacts.org" },
     ],
-    ...(isGitHubPages ? { unoptimized: true } : {}),
   },
-  ...(isGitHubPages
-    ? {
-        output: "export",
-        basePath: repo,
-        assetPrefix: `${repo}/`,
-      }
-    : {}),
 };
 
 export default nextConfig;

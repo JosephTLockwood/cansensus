@@ -1,28 +1,28 @@
 "use client";
 
-import { DRINKS } from "@/lib/data";
 import { caffeineDensity, fmtScore, rankMap, scoreFor } from "@/lib/scoring";
-import type { Ratings } from "@/lib/types";
+import type { Drink, Ratings } from "@/lib/types";
 import { SectionHeader } from "./SectionHeader";
 
 type Props = {
+  drinks: Drink[];
   ratings: Ratings;
   hoverId: string;
   onHover: (id: string) => void;
 };
 
-export function FlavourMap({ ratings, hoverId, onHover }: Props) {
+export function FlavourMap({ drinks, ratings, hoverId, onHover }: Props) {
   // Dot size tracks score where there is one; unrated cans stay small and
   // faint rather than pretending to a size they haven't earned.
-  const scores = DRINKS.map((d) => scoreFor(d, ratings)).filter(
+  const scores = drinks.map((d) => scoreFor(d, ratings)).filter(
     (v): v is number => v !== null,
   );
   const lo = scores.length ? Math.min(...scores) : 0;
   const hi = scores.length ? Math.max(...scores) : 10;
   const span = Math.max(0.4, hi - lo);
 
-  const rankOf = rankMap(ratings);
-  const hovered = DRINKS.find((d) => d.id === hoverId) ?? DRINKS[0];
+  const rankOf = rankMap(drinks, ratings);
+  const hovered = drinks.find((d) => d.id === hoverId) ?? drinks[0];
 
   return (
     <section id="map" className="section">
@@ -62,7 +62,7 @@ export function FlavourMap({ ratings, hoverId, onHover }: Props) {
             Mild
           </span>
 
-          {DRINKS.map((d) => {
+          {drinks.map((d) => {
             const score = scoreFor(d, ratings);
             const t = score === null ? 0 : (score - lo) / span;
             const size = score === null ? 11 : Math.round(14 + t * 34);

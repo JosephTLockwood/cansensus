@@ -1,13 +1,13 @@
-import { CAFFEINE_BANDS, DRINKS } from "@/lib/data";
+import { CAFFEINE_BANDS } from "@/lib/data";
 import { averageOf, caffeineDensity } from "@/lib/scoring";
-import type { Ratings } from "@/lib/types";
+import type { Drink, Ratings } from "@/lib/types";
 import { SectionHeader } from "./SectionHeader";
 
 type Bar = { label: string; val: string; pct: number; color: string };
 type LabCard = { title: string; sub: string; bars: Bar[]; verdict: string };
 
-export function LabSection({ ratings }: { ratings: Ratings }) {
-  const cards = buildCards(ratings);
+export function LabSection({ drinks, ratings }: { drinks: Drink[]; ratings: Ratings }) {
+  const cards = buildCards(drinks, ratings);
 
   return (
     <section id="lab" className="section">
@@ -95,14 +95,14 @@ export function LabSection({ ratings }: { ratings: Ratings }) {
  * shape of the league rather than inventing a correlation, and the Value card
  * needs prices, which Open Food Facts does not carry at all.
  */
-function buildCards(ratings: Ratings): LabCard[] {
-  const scored = DRINKS.filter((d) => ratings[d.id]);
-  const rated = (d: (typeof DRINKS)[number]) => ratings[d.id]?.score ?? null;
+function buildCards(drinks: Drink[], ratings: Ratings): LabCard[] {
+  const scored = drinks.filter((d) => ratings[d.id]);
+  const rated = (d: Drink) => ratings[d.id]?.score ?? null;
 
   // --- sugar ---
-  const zero = DRINKS.filter((d) => d.sug === 0);
-  const full = DRINKS.filter((d) => d.sug !== null && d.sug > 0);
-  const unknown = DRINKS.filter((d) => d.sug === null);
+  const zero = drinks.filter((d) => d.sug === 0);
+  const full = drinks.filter((d) => d.sug !== null && d.sug > 0);
+  const unknown = drinks.filter((d) => d.sug === null);
   const zeroAvg = averageOf(zero, rated);
   const fullAvg = averageOf(full, rated);
 
@@ -123,12 +123,12 @@ function buildCards(ratings: Ratings): LabCard[] {
   // --- caffeine ---
   const bandColors = ["#3EE8FF", "#D8FF3E", "#9AFF3E", "#FF5B24"];
   const bands = CAFFEINE_BANDS.map(([min, max, label], i) => {
-    const group = DRINKS.filter((d) => d.caf >= min && d.caf < max);
+    const group = drinks.filter((d) => d.caf >= min && d.caf < max);
     return { label, n: group.length, color: bandColors[i] };
   });
   const biggestBand = [...bands].sort((a, b) => b.n - a.n)[0];
   const maxBand = Math.max(...bands.map((b) => b.n), 1);
-  const caffeineVerdict = `The league clusters in the ${biggestBand.label.toLowerCase()} band (${biggestBand.n} of ${DRINKS.length} cans). Whether more milligrams means more points needs ratings across every band.`;
+  const caffeineVerdict = `The league clusters in the ${biggestBand.label.toLowerCase()} band (${biggestBand.n} of ${drinks.length} cans). Whether more milligrams means more points needs ratings across every band.`;
 
   const cards: LabCard[] = [
     {
@@ -139,13 +139,13 @@ function buildCards(ratings: Ratings): LabCard[] {
         {
           label: `Zero sugar (${zero.length})`,
           val: String(zero.length),
-          pct: Math.round((zero.length / DRINKS.length) * 100),
+          pct: Math.round((zero.length / drinks.length) * 100),
           color: "#D8FF3E",
         },
         {
           label: `Has sugar (${full.length})`,
           val: String(full.length),
-          pct: Math.round((full.length / DRINKS.length) * 100),
+          pct: Math.round((full.length / drinks.length) * 100),
           color: "#FF5B24",
         },
         ...(unknown.length
@@ -153,7 +153,7 @@ function buildCards(ratings: Ratings): LabCard[] {
               {
                 label: `No data (${unknown.length})`,
                 val: "—",
-                pct: Math.round((unknown.length / DRINKS.length) * 100),
+                pct: Math.round((unknown.length / drinks.length) * 100),
                 color: "#2C3024",
               },
             ]
@@ -176,7 +176,7 @@ function buildCards(ratings: Ratings): LabCard[] {
       sub: "Strongest caffeine per 100 ml",
       verdict:
         "Caffeine density is the one intensity measure that needs no opinion — it comes straight off the panel.",
-      bars: [...DRINKS]
+      bars: [...drinks]
         .sort((a, b) => caffeineDensity(b) - caffeineDensity(a))
         .slice(0, 5)
         .map((d) => ({

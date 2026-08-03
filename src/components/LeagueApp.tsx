@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DRINKS } from "@/lib/data";
+import { useDrinks } from "@/lib/use-drinks";
 import { localRatingsSource, type RatingsSource } from "@/lib/ratings-source";
 import {
   createSupabaseRatingsSource,
@@ -9,6 +9,7 @@ import {
 } from "@/lib/supabase-ratings-source";
 import { getSupabase } from "@/lib/supabase/client";
 import { useAuthContext } from "./AuthProvider";
+import { SubmitCanDialog } from "./SubmitCanDialog";
 import { compositeScore, DEFAULT_VALS, fmtScore, ranked, scoreFor } from "@/lib/scoring";
 import type { SliderKey, Vals } from "@/lib/types";
 import { useRatings } from "@/lib/use-ratings";
@@ -38,6 +39,8 @@ export function LeagueApp({
   ratingsSource?: RatingsSource;
 }) {
   const { session, profile } = useAuthContext();
+  const { drinks, reloadDrinks } = useDrinks();
+  const [submitOpen, setSubmitOpen] = useState(false);
   const userId = profile ? session?.user?.id : undefined;
 
   // Signed in with a handle -> Postgres. Otherwise this device's localStorage,
@@ -51,9 +54,9 @@ export function LeagueApp({
 
   const { ratings, rate, reload } = useRatings(source);
 
-  const [selId, setSelId] = useState(DRINKS[0].id);
+  const [selId, setSelId] = useState(drinks[0]?.id ?? "");
   const [vals, setVals] = useState<Vals>(DEFAULT_VALS);
-  const [hoverId, setHoverId] = useState(DRINKS[0].id);
+  const [hoverId, setHoverId] = useState(drinks[0]?.id ?? "");
   const [toast, setToast] = useState("");
 
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -97,15 +100,15 @@ export function LeagueApp({
     [ratings],
   );
 
-  const selected = DRINKS.find((d) => d.id === selId) ?? DRINKS[0];
+  const selected = drinks.find((d) => d.id === selId) ?? drinks[0];
 
   const submit = useCallback(() => {
     const score = compositeScore(vals);
     const rating = { vals: { ...vals }, score };
 
     // Compare the table before and after so the toast can report the move.
-    const before = ranked(DRINKS, ratings).findIndex((d) => d.id === selId);
-    const after = ranked(DRINKS, { ...ratings, [selId]: rating }).findIndex(
+    const before = ranked(drinks, ratings).findIndex((d) => d.id === selId);
+    const after = ranked(drinks, { ...ratings, [selId]: rating }).findIndex(
       (d) => d.id === selId,
     );
     const move =
@@ -113,35 +116,35 @@ export function LeagueApp({
 
     rate(selId, rating);
     flash(
-      `${selected.name} — ${score.toFixed(2)} · ${move} #${after + 1}`,
+      `${selected?.name ?? "Can"} — ${score.toFixed(2)} · ${move} #${after + 1}`,
     );
-  }, [flash, rate, ratings, selId, selected.name, vals]);
+  }, [drinks, flash, rate, ratings, selId, selected, vals]);
 
   const roulette = useCallback(() => {
-    const unrated = DRINKS.filter((d) => !ratings[d.id]);
-    const pool = unrated.length ? unrated : DRINKS;
+    const unrated = drinks.filter((d) => !ratings[d.id]);
+    const pool = unrated.length ? unrated : drinks;
     const pick = pool[Math.floor(Math.random() * pool.length)];
     select(pick.id);
     flash(`Roulette says: ${pick.name}`);
-  }, [flash, ratings, select]);
+  }, [drinks, flash, ratings, select]);
 
   /** From the standings: load the can, then bring the form back into view. */
   const rateThis = useCallback(
     (id: string) => {
       select(id);
-      flash(`Loaded ${DRINKS.find((d) => d.id === id)?.name} into the form`);
+      flash(`Loaded ${drinks.find((d) => d.id === id)?.name} into the form`);
       document
         .getElementById("rate")
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     },
-    [flash, select],
+    [drinks, flash, select],
   );
 
   const changeVal = useCallback((key: SliderKey, value: number) => {
     setVals((prev) => ({ ...prev, [key]: value }));
   }, []);
 
-  const order = useMemo(() => ranked(DRINKS, ratings), [ratings]);
+  const order = useMemo(() => ranked(drinks, ratings), [drinks, ratings]);
 
   // Only cans with a real score belong in the ticker. With none rated it
   // advertises the catalog instead of inventing a top eight.
@@ -149,7 +152,7 @@ export function LeagueApp({
     const scored = order.filter((d) => scoreFor(d, ratings) !== null);
     if (!scored.length) {
       return (
-        `${DRINKS.length} cans in the league  •  real caffeine + sugar from ` +
+        `${drinks.length} cans in the league  •  real caffeine + sugar from ` +
         `Open Food Facts  •  rate one to start the table  •  `
       );
     }
@@ -161,15 +164,15 @@ export function LeagueApp({
         )
         .join("     •     ") + "     •     "
     );
-  }, [order, ratings]);
+  }, [drinks.length, order, ratings]);
 
   const myCount = Object.keys(ratings).length;
-  const brandCount = new Set(DRINKS.map((d) => d.brand)).size;
+  const brandCount = new Set(drinks.map((d) => d.brand)).size;
 
   return (
     <div className="shell">
       <Hero
-        drinkCount={DRINKS.length}
+        drinkCount={drinks.length}
         brandCount={brandCount}
         myCount={myCount}
       />
@@ -183,13 +186,32 @@ export function LeagueApp({
         onChangeVal={changeVal}
         onSubmit={submit}
         onRoulette={roulette}
+        onAddCan={() => setSubmitOpen(true)}
       />
-      <StandingsSection ratings={ratings} onRateThis={rateThis} />
-      <TrendsSection ratings={ratings} />
-      <FlavourMap ratings={ratings} hoverId={hoverId} onHover={setHoverId} />
-      <LabSection ratings={ratings} />
-      <TastersSection ratings={ratings} />
+      <StandingsSection
+        drinks={drinks}
+        ratings={ratings}
+        onRateThis={rateThis}
+      />
+      <TrendsSection drinks={drinks} ratings={ratings} />
+      <FlavourMap
+        drinks={drinks}
+        ratings={ratings}
+        hoverId={hoverId}
+        onHover={setHoverId}
+      />
+      <LabSection drinks={drinks} ratings={ratings} />
+      <TastersSection drinks={drinks} ratings={ratings} />
       <SiteFooter />
+      {submitOpen && (
+        <SubmitCanDialog
+          onClose={() => setSubmitOpen(false)}
+          onSubmitted={(message) => {
+            flash(message);
+            void reloadDrinks();
+          }}
+        />
+      )}
       <Toast message={toast} />
     </div>
   );

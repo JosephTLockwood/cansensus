@@ -1407,3 +1407,43 @@ input[type="range"]::-moz-range-thumb {
   flex-wrap: wrap;
   margin-top: 12px;
 }
+
+/* wider modal for the submit form, with its side-by-side fields */
+.modalCardWide {
+  max-width: 620px;
+}
+
+.fieldRow {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.field {
+  flex: 1 1 150px;
+  min-width: 0;
+  margin-bottom: 12px;
+}
+
+.field .handleInput {
+  padding: 10px 13px;
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+/* inline "+ Add a can" affordance */
+.addCanLink {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lime);
+  cursor: pointer;
+  transition: color 0.16s;
+}
+
+.addCanLink:hover {
+  color: var(--orange);
+}

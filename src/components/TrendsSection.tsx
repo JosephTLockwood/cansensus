@@ -1,6 +1,5 @@
-import { DRINKS } from "@/lib/data";
 import { caffeineDensity } from "@/lib/scoring";
-import type { Ratings } from "@/lib/types";
+import type { Drink, Ratings } from "@/lib/types";
 import { SectionHeader } from "./SectionHeader";
 
 /**
@@ -12,14 +11,14 @@ import { SectionHeader } from "./SectionHeader";
  * Rather than show three blank cards, this states what is missing and shows the
  * one intensity comparison the nutrition panel does support today.
  */
-export function TrendsSection({ ratings }: { ratings: Ratings }) {
-  const hasHistory = DRINKS.some((d) => d.crowd?.prevScore != null);
+export function TrendsSection({ drinks, ratings }: { drinks: Drink[]; ratings: Ratings }) {
+  const hasHistory = drinks.some((d) => d.crowd?.prevScore != null);
   const ratedCount = Object.keys(ratings).length;
 
-  const strongest = [...DRINKS]
+  const strongest = [...drinks]
     .sort((a, b) => caffeineDensity(b) - caffeineDensity(a))
     .slice(0, 6);
-  const gentlest = [...DRINKS]
+  const gentlest = [...drinks]
     .sort((a, b) => caffeineDensity(a) - caffeineDensity(b))
     .slice(0, 6);
 
@@ -93,7 +92,7 @@ function IntensityCard({
 }: {
   title: string;
   titleColor: string;
-  drinks: typeof DRINKS;
+  drinks: Drink[];
 }) {
   const max = Math.max(...drinks.map(caffeineDensity), 1);
   return (

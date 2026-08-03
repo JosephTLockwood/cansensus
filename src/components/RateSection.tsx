@@ -17,6 +17,7 @@ type Props = {
   onChangeVal: (key: SliderKey, value: number) => void;
   onSubmit: () => void;
   onRoulette: () => void;
+  onAddCan: () => void;
 };
 
 export function RateSection({
@@ -28,6 +29,7 @@ export function RateSection({
   onChangeVal,
   onSubmit,
   onRoulette,
+  onAddCan,
 }: Props) {
   const [query, setQuery] = useState("");
   const liveScore = compositeScore(vals);
@@ -65,12 +67,9 @@ export function RateSection({
               }}
             >
               <span className="label">Step 1 — choose your poison</span>
-              <span
-                className="mono"
-                style={{ fontSize: 10, color: "var(--faint)" }}
-              >
-                {shown.length} of {chipOrder.length}
-              </span>
+              <button type="button" className="addCanLink mono" onClick={onAddCan}>
+                + Add a can
+              </button>
             </div>
 
             {/* At 38 cans the chip cloud already dominated the card, and user
@@ -83,6 +82,13 @@ export function RateSection({
               aria-label="Search cans"
               className="mono canSearch"
             />
+
+            <div
+              className="mono"
+              style={{ fontSize: 10, color: "var(--faint)", marginBottom: 8 }}
+            >
+              {shown.length} of {chipOrder.length} cans
+            </div>
 
             <div className="chipRow">
               {shown.map((d) => {
@@ -112,8 +118,10 @@ export function RateSection({
               })}
               {shown.length === 0 && (
                 <p className="emptyNote">
-                  Nothing matches “{query}”. Submitting missing cans arrives with
-                  sign-in — including store brands no public database carries.
+                  Nothing matches “{query}”.{" "}
+                  <button type="button" className="addCanLink mono" onClick={onAddCan}>
+                    Add it to the league →
+                  </button>
                 </p>
               )}
             </div>

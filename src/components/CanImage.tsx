@@ -1,12 +1,20 @@
-import Image from "next/image";
 import type { Drink } from "@/lib/types";
 
 /**
- * A can's real photograph, falling back to the design's abstract gradient can
- * when Open Food Facts has no image for it. Nothing ever renders empty.
+ * The can visual.
  *
- * OFF photos are shot on white, so on this dark palette they need their own
- * faintly-lit panel or they read as a floating white rectangle.
+ * This deliberately does NOT show the Open Food Facts photograph. Those are
+ * contributor snapshots — frequently a hand holding a can on a kitchen table,
+ * lit badly, at an angle — and they made the page look worse than the design's
+ * own stylised can, which is on-brand and consistent across all 38 rows.
+ *
+ * Official brand photography is not an option: it is the brands' copyright with
+ * no licence granted, unlike the CC BY-SA images from Open Food Facts. Real
+ * photos come back when submissions let people upload their own, which we can
+ * license properly through submission terms.
+ *
+ * The URL stays in the data and the row detail still links to the Open Food
+ * Facts product page, so nothing is lost by not rendering it.
  */
 export function CanImage({
   drink,
@@ -15,10 +23,6 @@ export function CanImage({
   drink: Drink;
   variant: "panel" | "row";
 }) {
-  // Deliberately a colour chip, not a photo. Open Food Facts photos are
-  // contributor snapshots — often a hand holding a can on a kitchen table —
-  // and at 20px they read as noise. The photo earns its space in the rate
-  // panel and the expanded row, where it is big enough to recognise.
   if (variant === "row") {
     return (
       <span
@@ -31,25 +35,6 @@ export function CanImage({
     );
   }
 
-  if (!drink.imageUrl) return <FallbackCan drink={drink} />;
-
-  return (
-    <div className="canPhoto">
-      <Image
-        src={drink.imageUrl}
-        alt={`${drink.name} can`}
-        width={220}
-        height={400}
-        className="canPhotoImg"
-        unoptimized
-        priority={false}
-      />
-    </div>
-  );
-}
-
-/** The original design's stylised can — still the fallback, not dead code. */
-function FallbackCan({ drink }: { drink: Drink }) {
   return (
     <div
       className="can"
