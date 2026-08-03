@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DRINKS } from "@/lib/data";
 import { localRatingsSource, type RatingsSource } from "@/lib/ratings-source";
-import { blended, compositeScore, DEFAULT_VALS, ranked } from "@/lib/scoring";
+import { compositeScore, DEFAULT_VALS, fmtScore, ranked, scoreFor } from "@/lib/scoring";
 import type { SliderKey, Vals } from "@/lib/types";
 import { useRatings } from "@/lib/use-ratings";
 import { FlavourMap } from "./FlavourMap";
@@ -18,7 +18,7 @@ import { Toast } from "./Toast";
 import { TrendsSection } from "./TrendsSection";
 
 const TOAST_MS = 2600;
-const FIRST_PICK = "ala";
+
 
 /**
  * Owns the state every section reads: the user's ratings, which can is loaded
@@ -32,9 +32,9 @@ export function LeagueApp({
 }) {
   const { ratings, rate } = useRatings(ratingsSource);
 
-  const [selId, setSelId] = useState(FIRST_PICK);
+  const [selId, setSelId] = useState(DRINKS[0].id);
   const [vals, setVals] = useState<Vals>(DEFAULT_VALS);
-  const [hoverId, setHoverId] = useState(FIRST_PICK);
+  const [hoverId, setHoverId] = useState(DRINKS[0].id);
   const [toast, setToast] = useState("");
 
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -108,25 +108,34 @@ export function LeagueApp({
 
   const order = useMemo(() => ranked(DRINKS, ratings), [ratings]);
 
-  const tickerText = useMemo(
-    () =>
-      order
+  // Only cans with a real score belong in the ticker. With none rated it
+  // advertises the catalog instead of inventing a top eight.
+  const tickerText = useMemo(() => {
+    const scored = order.filter((d) => scoreFor(d, ratings) !== null);
+    if (!scored.length) {
+      return (
+        `${DRINKS.length} cans in the league  •  real caffeine + sugar from ` +
+        `Open Food Facts  •  rate one to start the table  •  `
+      );
+    }
+    return (
+      scored
         .slice(0, 8)
         .map(
-          (d, i) => `#${i + 1} ${d.name}  ${blended(d, ratings).toFixed(2)}`,
+          (d, i) => `#${i + 1} ${d.name}  ${fmtScore(scoreFor(d, ratings))}`,
         )
-        .join("     •     ") + "     •     ",
-    [order, ratings],
-  );
+        .join("     •     ") + "     •     "
+    );
+  }, [order, ratings]);
 
   const myCount = Object.keys(ratings).length;
-  const crowdVotes = DRINKS.reduce((a, d) => a + d.v, 0);
+  const brandCount = new Set(DRINKS.map((d) => d.brand)).size;
 
   return (
     <div className="shell">
       <Hero
-        totalVotes={crowdVotes + myCount}
         drinkCount={DRINKS.length}
+        brandCount={brandCount}
         myCount={myCount}
       />
       <Ticker text={tickerText} />

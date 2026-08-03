@@ -14,12 +14,18 @@ const isGitHubPages = process.env.DEPLOY_TARGET === "gh-pages";
 const repo = "/energy-league";
 
 const nextConfig: NextConfig = {
+  images: {
+    // Can photographs are served from Open Food Facts (CC BY-SA 3.0).
+    remotePatterns: [
+      { protocol: "https", hostname: "images.openfoodfacts.org" },
+    ],
+    ...(isGitHubPages ? { unoptimized: true } : {}),
+  },
   ...(isGitHubPages
     ? {
         output: "export",
         basePath: repo,
         assetPrefix: `${repo}/`,
-        images: { unoptimized: true },
       }
     : {}),
 };

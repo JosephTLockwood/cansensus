@@ -1,381 +1,47 @@
-import type { ColDef, Drink, FilterDef, Person, SliderDef } from "./types";
+import catalog from "./catalog.generated.json";
+import type { ColDef, Drink, FilterDef, SliderDef } from "./types";
 
 /**
- * Seed data for the league.
+ * The catalog comes from Open Food Facts via `npm run import:catalog`
+ * (scripts/import-catalog.mjs). Do not hand-edit catalog.generated.json —
+ * regenerate it. See ATTRIBUTION.md for the licence terms.
  *
- * This is the file the backend replaces first: `DRINKS` and `PEOPLE` become
- * database reads, while `SLIDER_DEFS` / `FILTERS` / `COLS` stay here because
- * they describe the UI, not the data. See docs/BACKEND.md.
+ * What is deliberately NOT here: crowd scores, vote counts, weekly history and
+ * prices. Those were invented in the original prototype. They now arrive from
+ * the backend (docs/BACKEND.md) or from user submissions, and until then the UI
+ * shows "—" rather than a number nobody measured.
  */
 
-/** Can colours, assigned by index so the palette stays stable across renders. */
-export const PALETTE = [
-  "#D8FF3E",
-  "#FF5B24",
-  "#3EE8FF",
-  "#B77BFF",
-  "#FFC53E",
-  "#FF4D8D",
-  "#6BFFA8",
-  "#FF8A3E",
-  "#7FB4FF",
-  "#E8FF7A",
-  "#FF6BD6",
-  "#4DFFD2",
-  "#FFD86B",
-  "#9AFF3E",
-  "#FF9B9B",
-  "#5EC8FF",
-];
+type RawDrink = (typeof catalog.drinks)[number];
 
-type DrinkSeed = Omit<Drink, "color">;
-
-const DRINK_SEED: DrinkSeed[] = [
-  {
-    id: "rb",
-    name: "Red Bull",
-    sub: "8.4 oz",
-    caf: 80,
-    sug: 27,
-    cal: 110,
-    price: 2.99,
-    sweet: 72,
-    nuke: 38,
-    s: 8.24,
-    prev: 8.31,
-    v: 1842,
-    sd: 1.1,
-    tags: ["classic", "taurine", "12 oz option"],
-    note: "The benchmark. Nobody scores it a 10, nobody scores it below a 6.",
-  },
-  {
-    id: "rbz",
-    name: "Red Bull Sugarfree",
-    sub: "8.4 oz",
-    caf: 80,
-    sug: 0,
-    cal: 5,
-    price: 2.99,
-    sweet: 48,
-    nuke: 36,
-    s: 7.61,
-    prev: 7.42,
-    v: 1104,
-    sd: 1.6,
-    tags: ["zero sugar", "classic"],
-    note: "Splits the room on aftertaste and unites it on convenience.",
-  },
-  {
-    id: "mon",
-    name: "Monster Original",
-    sub: "16 oz",
-    caf: 160,
-    sug: 54,
-    cal: 210,
-    price: 2.79,
-    sweet: 88,
-    nuke: 62,
-    s: 7.95,
-    prev: 7.88,
-    v: 1620,
-    sd: 1.4,
-    tags: ["high sugar", "big can"],
-    note: "Peak sugar, peak nostalgia. Scores high at 2am, lower at 2pm.",
-  },
-  {
-    id: "ult",
-    name: "Monster Ultra White",
-    sub: "16 oz",
-    caf: 150,
-    sug: 0,
-    cal: 10,
-    price: 2.79,
-    sweet: 56,
-    nuke: 44,
-    s: 8.62,
-    prev: 8.29,
-    v: 1388,
-    sd: 0.9,
-    tags: ["zero sugar", "big can"],
-    note: "The consensus pick of the zero-sugar era. Very few detractors.",
-  },
-  {
-    id: "cel",
-    name: "Celsius Sparkling Orange",
-    sub: "12 oz",
-    caf: 200,
-    sug: 0,
-    cal: 10,
-    price: 2.29,
-    sweet: 52,
-    nuke: 70,
-    s: 8.41,
-    prev: 8.02,
-    v: 1512,
-    sd: 1.3,
-    tags: ["zero sugar", "high caffeine", "fitness"],
-    note: "Gym-bag default. Climbing fast on value as much as flavour.",
-  },
-  {
-    id: "ala",
-    name: "Alani Nu Breezeberry",
-    sub: "12 oz",
-    caf: 200,
-    sug: 0,
-    cal: 10,
-    price: 2.79,
-    sweet: 78,
-    nuke: 58,
-    s: 8.77,
-    prev: 8.44,
-    v: 1291,
-    sd: 1.2,
-    tags: ["zero sugar", "high caffeine"],
-    note: "Currently the highest ceiling in the league. Sweet-tooth bias acknowledged.",
-  },
-  {
-    id: "bng",
-    name: "Bang Blue Razz",
-    sub: "16 oz",
-    caf: 300,
-    sug: 0,
-    cal: 0,
-    price: 2.49,
-    sweet: 60,
-    nuke: 94,
-    s: 6.42,
-    prev: 6.88,
-    v: 987,
-    sd: 2.3,
-    tags: ["zero sugar", "extreme caffeine"],
-    note: "Most divisive can in the league. 300 mg is a personality, not a serving.",
-  },
-  {
-    id: "ght",
-    name: "Ghost Sour Patch Redberry",
-    sub: "16 oz",
-    caf: 200,
-    sug: 0,
-    cal: 5,
-    price: 2.99,
-    sweet: 84,
-    nuke: 66,
-    s: 8.33,
-    prev: 8.09,
-    v: 1043,
-    sd: 1.5,
-    tags: ["zero sugar", "licensed flavour"],
-    note: "Tastes like the candy. Whether that is good is the whole debate.",
-  },
-  {
-    id: "c4",
-    name: "C4 Smart Energy",
-    sub: "16 oz",
-    caf: 200,
-    sug: 0,
-    cal: 5,
-    price: 2.69,
-    sweet: 44,
-    nuke: 64,
-    s: 7.28,
-    prev: 7.35,
-    v: 742,
-    sd: 1.4,
-    tags: ["zero sugar", "nootropics"],
-    note: "Clean, slightly clinical. The spreadsheet drinker’s choice.",
-  },
-  {
-    id: "rgn",
-    name: "Reign Storm",
-    sub: "12 oz",
-    caf: 200,
-    sug: 0,
-    cal: 10,
-    price: 2.19,
-    sweet: 38,
-    nuke: 60,
-    s: 7.04,
-    prev: 6.91,
-    v: 664,
-    sd: 1.7,
-    tags: ["zero sugar", "value"],
-    note: "Underrated on price-per-milligram, overrated by nobody on taste.",
-  },
-  {
-    id: "rck",
-    name: "Rockstar Pure Zero",
-    sub: "16 oz",
-    caf: 240,
-    sug: 0,
-    cal: 10,
-    price: 2.49,
-    sweet: 66,
-    nuke: 76,
-    s: 6.87,
-    prev: 7.12,
-    v: 598,
-    sd: 1.6,
-    tags: ["zero sugar", "high caffeine"],
-    note: "Sliding. The crowd has moved on and the can knows it.",
-  },
-  {
-    id: "prm",
-    name: "Prime Energy Tropical",
-    sub: "12 oz",
-    caf: 200,
-    sug: 0,
-    cal: 10,
-    price: 2.49,
-    sweet: 90,
-    nuke: 56,
-    s: 6.15,
-    prev: 6.74,
-    v: 1377,
-    sd: 2.5,
-    tags: ["zero sugar", "hype"],
-    note: "Highest variance after Bang. Loved and loathed in equal measure.",
-  },
-  {
-    id: "nos",
-    name: "NOS Original",
-    sub: "16 oz",
-    caf: 160,
-    sug: 54,
-    cal: 210,
-    price: 2.39,
-    sweet: 80,
-    nuke: 58,
-    s: 7.12,
-    prev: 7.05,
-    v: 412,
-    sd: 1.5,
-    tags: ["high sugar", "value"],
-    note: "A cult favourite that never quite cracks the top five.",
-  },
-  {
-    id: "yrb",
-    name: "Yerba Mate Bluephoria",
-    sub: "15.5 oz",
-    caf: 150,
-    sug: 28,
-    cal: 140,
-    price: 3.29,
-    sweet: 58,
-    nuke: 34,
-    s: 8.05,
-    prev: 7.94,
-    v: 836,
-    sd: 1.8,
-    tags: ["brewed", "high sugar", "organic"],
-    note: "Scores oddly well on aftertaste and oddly badly on price.",
-  },
-  {
-    id: "5hr",
-    name: "5-hour Energy Berry",
-    sub: "1.93 oz shot",
-    caf: 200,
-    sug: 0,
-    cal: 4,
-    price: 3.49,
-    sweet: 34,
-    nuke: 88,
-    s: 5.58,
-    prev: 5.71,
-    v: 534,
-    sd: 2.1,
-    tags: ["shot", "zero sugar"],
-    note: "Nobody enjoys it. Everybody keeps one in the glovebox.",
-  },
-  {
-    id: "zoa",
-    name: "ZOA Wild Orange",
-    sub: "16 oz",
-    caf: 160,
-    sug: 0,
-    cal: 15,
-    price: 2.59,
-    sweet: 62,
-    nuke: 48,
-    s: 7.44,
-    prev: 7.28,
-    v: 388,
-    sd: 1.3,
-    tags: ["zero sugar", "vitamins"],
-    note: "Quietly competent. The utility infielder of the league.",
-  },
-];
-
-export const DRINKS: Drink[] = DRINK_SEED.map((d, i) => ({
+export const DRINKS: Drink[] = (catalog.drinks as RawDrink[]).map((d) => ({
   ...d,
-  color: PALETTE[i % PALETTE.length],
+  sug: d.sug ?? null,
+  cal: d.cal ?? null,
+  imageSmallUrl: d.imageSmallUrl ?? null,
+  price: null,
+  crowd: null,
 }));
 
-export const PEOPLE: Person[] = [
-  {
-    name: "canfather",
-    count: 142,
-    streak: "31d",
-    badge: "Season 1 veteran · tasted every can",
-    sweetPref: 70,
-    nukePref: 60,
-  },
-  {
-    name: "tallboy_tori",
-    count: 128,
-    streak: "19d",
-    badge: "Zero-sugar purist",
-    sweetPref: 52,
-    nukePref: 52,
-  },
-  {
-    name: "2am_dev",
-    count: 117,
-    streak: "46d",
-    badge: "Longest streak in the league",
-    sweetPref: 64,
-    nukePref: 82,
-  },
-  {
-    name: "sugarfree_sam",
-    count: 96,
-    streak: "12d",
-    badge: "Never rated a full-sugar can",
-    sweetPref: 44,
-    nukePref: 56,
-  },
-  {
-    name: "gymrat_gabe",
-    count: 88,
-    streak: "8d",
-    badge: "Pre-workout specialist",
-    sweetPref: 58,
-    nukePref: 74,
-  },
-  {
-    name: "nap_enjoyer",
-    count: 71,
-    streak: "4d",
-    badge: "Contrarian · lowest average score",
-    sweetPref: 36,
-    nukePref: 30,
-  },
-  {
-    name: "flavourtown",
-    count: 63,
-    streak: "22d",
-    badge: "Rates on taste alone",
-    sweetPref: 86,
-    nukePref: 44,
-  },
-  {
-    name: "quiet_riot",
-    count: 57,
-    streak: "6d",
-    badge: "Only rates cans under $2.50",
-    sweetPref: 60,
-    nukePref: 66,
-  },
-];
+export const CATALOG_META = {
+  source: catalog.generatedFrom,
+  dataLicense: catalog.dataLicense,
+  imageLicense: catalog.imageLicense,
+  attributionUrl: catalog.attributionUrl,
+};
+
+/** Descriptive chips, derived from the real nutrition panel. */
+export function tagsFor(d: Drink): string[] {
+  const tags: string[] = [];
+  if (d.sug === 0) tags.push("zero sugar");
+  else if (d.sug !== null && d.sug >= 40) tags.push("high sugar");
+  if (d.caf >= 250) tags.push("extreme caffeine");
+  else if (d.caf >= 180) tags.push("high caffeine");
+  if (d.ml >= 470) tags.push("big can");
+  if (d.ml <= 100) tags.push("shot");
+  if (!d.us) tags.push("import");
+  return tags;
+}
 
 /** The four axes a taster scores, and their weight in the composite. */
 export const SLIDER_DEFS: SliderDef[] = [
@@ -385,14 +51,17 @@ export const SLIDER_DEFS: SliderDef[] = [
   { key: "value", label: "Value", hint: "per dollar", w: 0.14 },
 ];
 
+/* The "Under $2.60" filter is gone with prices — it cannot be evaluated. */
 export const FILTERS: FilterDef[] = [
   { key: "zero", label: "Zero sugar", test: (d) => d.sug === 0 },
-  { key: "sugar", label: "Full sugar", test: (d) => d.sug > 0 },
+  { key: "sugar", label: "Full sugar", test: (d) => d.sug !== null && d.sug > 0 },
   { key: "high", label: "200mg+", test: (d) => d.caf >= 200 },
-  { key: "cheap", label: "Under $2.60", test: (d) => d.price < 2.6 },
+  { key: "big", label: "Big can", test: (d) => d.ml >= 470 },
   { key: "mine", label: "Rated by me", test: (d, ratings) => !!ratings[d.id] },
 ];
 
+/* "mg / $" is gone with prices. Δ wk stays: it renders "—" until weekly
+   snapshots exist, and lights up unchanged once they do. */
 export const COLS: ColDef[] = [
   { key: "rank", label: "#", align: "left" },
   { key: "name", label: "Drink", align: "left" },
@@ -400,7 +69,6 @@ export const COLS: ColDef[] = [
   { key: "votes", label: "Votes", align: "right", ext: true },
   { key: "caf", label: "Caffeine", align: "right", ext: true },
   { key: "sug", label: "Sugar", align: "right", ext: true },
-  { key: "ppd", label: "mg / $", align: "right", ext: true },
   { key: "delta", label: "Δ wk", align: "right" },
 ];
 
@@ -412,5 +80,5 @@ export const CAFFEINE_BANDS: [number, number, string][] = [
   [220, 400, "220 mg+"],
 ];
 
-export const SEASON = 3;
-export const WEEK = 31;
+export const SEASON = 1;
+export const WEEK = 1;

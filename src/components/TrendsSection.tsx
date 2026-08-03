@@ -1,36 +1,48 @@
 import { DRINKS } from "@/lib/data";
-import { blended, sparkline } from "@/lib/scoring";
-import type { Drink, Ratings } from "@/lib/types";
+import { caffeineDensity } from "@/lib/scoring";
+import type { Ratings } from "@/lib/types";
 import { SectionHeader } from "./SectionHeader";
 
+/**
+ * The form guide needs week-over-week crowd history: risers, fallers, and how
+ * divisive a can is. All three came from invented numbers in the prototype
+ * (a sine wobble and a hand-set standard deviation), so with real data they are
+ * genuinely empty until the backend has been snapshotting for a few weeks.
+ *
+ * Rather than show three blank cards, this states what is missing and shows the
+ * one intensity comparison the nutrition panel does support today.
+ */
 export function TrendsSection({ ratings }: { ratings: Ratings }) {
-  const byMovement = (a: Drink, b: Drink) =>
-    blended(b, ratings) - b.prev - (blended(a, ratings) - a.prev);
+  const hasHistory = DRINKS.some((d) => d.crowd?.prevScore != null);
+  const ratedCount = Object.keys(ratings).length;
 
-  const risers = [...DRINKS].sort(byMovement).slice(0, 5);
-  const fallers = [...DRINKS].sort((a, b) => byMovement(b, a)).slice(0, 5);
-  const divisive = [...DRINKS].sort((a, b) => b.sd - a.sd).slice(0, 4);
+  const strongest = [...DRINKS]
+    .sort((a, b) => caffeineDensity(b) - caffeineDensity(a))
+    .slice(0, 6);
+  const gentlest = [...DRINKS]
+    .sort((a, b) => caffeineDensity(a) - caffeineDensity(b))
+    .slice(0, 6);
 
   return (
     <section id="trends" className="section">
       <div className="wrap">
         <SectionHeader num="03" title="Form guide" />
+        <p className="lede">
+          {hasHistory
+            ? "Week-over-week movement across the league."
+            : "Risers, fallers and the most divisive cans need week-over-week crowd history. Nothing has been snapshotted yet, so here is what the nutrition panel can tell you instead."}
+        </p>
 
         <div className="grid300">
-          <MoverCard
-            title="↑ Climbing"
+          <IntensityCard
+            title="⚡ Strongest per ml"
             titleColor="var(--lime)"
-            drinks={risers}
-            ratings={ratings}
-            changeColor="var(--lime)"
-            sign
+            drinks={strongest}
           />
-          <MoverCard
-            title="↓ Sliding"
-            titleColor="var(--orange)"
-            drinks={fallers}
-            ratings={ratings}
-            changeColor="var(--orange)"
+          <IntensityCard
+            title="○ Gentlest per ml"
+            titleColor="var(--cyan)"
+            drinks={gentlest}
           />
 
           <div className="divisiveCard">
@@ -38,53 +50,35 @@ export function TrendsSection({ ratings }: { ratings: Ratings }) {
               className="label"
               style={{ color: "var(--gold)", marginBottom: 16 }}
             >
-              ⚡ Hot takes — most divisive
+              Coming with the crowd
             </div>
-            {divisive.map((d) => {
-              // Rough love/hate split implied by the rating spread and score.
-              const hate = Math.round(d.sd * 16);
-              const love = Math.round(d.sd * 13 + blended(d, ratings) * 2);
-              const mid = Math.max(0, 100 - hate - love);
-              return (
-                <div key={d.id} className="divisiveRow">
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "baseline",
-                      gap: 12,
-                    }}
-                  >
-                    <span style={{ fontSize: 14, fontWeight: 600 }}>
-                      {d.name}
-                    </span>
-                    <span
-                      className="mono"
-                      style={{ fontSize: 11, color: "var(--gold)" }}
-                    >
-                      ±{d.sd.toFixed(1)}
-                    </span>
-                  </div>
-                  <div className="splitBar">
-                    <span
-                      style={{ background: "#FF5B24", width: `${hate}%` }}
-                    />
-                    <span
-                      style={{ background: "#2C3024", width: `${mid}%` }}
-                    />
-                    <span
-                      style={{ background: "#D8FF3E", width: `${love}%` }}
-                    />
-                  </div>
-                  <div
-                    className="mono"
-                    style={{ fontSize: 10, color: "var(--dim)", marginTop: 6 }}
-                  >
-                    {hate}% hate it · {love}% love it
-                  </div>
-                </div>
-              );
-            })}
+            <ul className="pendingList">
+              <li>
+                <strong>Climbing / sliding</strong> — needs a weekly snapshot of
+                every can&apos;s score. Starts the first Monday after launch.
+              </li>
+              <li>
+                <strong>Most divisive</strong> — needs the spread of ratings on
+                each can, which takes more than one rater.
+              </li>
+              <li>
+                <strong>Your form</strong> — how your scores drift against the
+                crowd over time.
+              </li>
+            </ul>
+            <p
+              className="mono"
+              style={{
+                fontSize: 11,
+                color: "var(--gold)",
+                marginTop: 14,
+                lineHeight: 1.5,
+              }}
+            >
+              {ratedCount
+                ? `${ratedCount} rating${ratedCount === 1 ? "" : "s"} logged on this device. They become week 1 of your form once sign-in lands.`
+                : "Rate a can to start your own history."}
+            </p>
           </div>
         </div>
       </div>
@@ -92,29 +86,23 @@ export function TrendsSection({ ratings }: { ratings: Ratings }) {
   );
 }
 
-function MoverCard({
+function IntensityCard({
   title,
   titleColor,
   drinks,
-  ratings,
-  changeColor,
-  sign = false,
 }: {
   title: string;
   titleColor: string;
-  drinks: Drink[];
-  ratings: Ratings;
-  changeColor: string;
-  /** risers need an explicit "+", fallers already carry the minus sign */
-  sign?: boolean;
+  drinks: typeof DRINKS;
 }) {
+  const max = Math.max(...drinks.map(caffeineDensity), 1);
   return (
     <div className="card">
       <div className="label" style={{ color: titleColor, marginBottom: 16 }}>
         {title}
       </div>
       {drinks.map((d) => {
-        const change = blended(d, ratings) - d.prev;
+        const density = caffeineDensity(d);
         return (
           <div key={d.id} className="trendRow">
             <span
@@ -123,26 +111,37 @@ function MoverCard({
               aria-hidden="true"
             />
             <span className="trendName">{d.name}</span>
-            <svg
-              viewBox="0 0 140 44"
-              style={{ width: 96, height: 26, flex: "none" }}
-              aria-hidden="true"
+            <span
+              style={{
+                width: 70,
+                height: 6,
+                borderRadius: 99,
+                background: "var(--line)",
+                overflow: "hidden",
+                flex: "none",
+              }}
             >
-              <polyline
-                points={sparkline(d, ratings)}
-                fill="none"
-                stroke={d.color}
-                strokeWidth={2.5}
-                strokeLinejoin="round"
+              <span
+                style={{
+                  display: "block",
+                  height: "100%",
+                  background: d.color,
+                  width: `${Math.round((density / max) * 100)}%`,
+                }}
               />
-            </svg>
-            <span className="trendChange" style={{ color: changeColor }}>
-              {sign ? "+" : ""}
-              {change.toFixed(2)}
+            </span>
+            <span className="trendChange" style={{ color: "var(--muted)" }}>
+              {density.toFixed(0)}
             </span>
           </div>
         );
       })}
+      <div
+        className="mono"
+        style={{ fontSize: 10, color: "var(--faint)", marginTop: 10 }}
+      >
+        mg caffeine per 100 ml
+      </div>
     </div>
   );
 }

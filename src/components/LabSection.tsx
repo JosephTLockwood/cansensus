@@ -1,5 +1,5 @@
 import { CAFFEINE_BANDS, DRINKS } from "@/lib/data";
-import { average, barPercent, blended } from "@/lib/scoring";
+import { averageOf, caffeineDensity } from "@/lib/scoring";
 import type { Ratings } from "@/lib/types";
 import { SectionHeader } from "./SectionHeader";
 
@@ -14,8 +14,10 @@ export function LabSection({ ratings }: { ratings: Ratings }) {
       <div className="wrap">
         <SectionHeader num="05" title="The lab" />
         <p className="lede">
-          What actually correlates with a high score? Crowd ratings crossed
-          against the nutrition panel.
+          What the nutrition panel says about the league, and what your own
+          ratings say back. Price-based analysis is missing on purpose &mdash;
+          Open Food Facts carries no prices, so mg-per-dollar has no honest
+          source until people submit them.
         </p>
 
         <div className="grid280">
@@ -85,104 +87,131 @@ export function LabSection({ ratings }: { ratings: Ratings }) {
 }
 
 /**
- * The three correlations, each with its verdict written from the live numbers
- * rather than hard-coded — so the copy stays honest once your own ratings
- * start moving the averages.
+ * The correlations, each with its verdict written from the live numbers rather
+ * than hard-coded, so the copy stays honest as ratings arrive.
+ *
+ * Two of these describe the catalog itself (sugar and caffeine distribution)
+ * and work today. Anything that needs a score falls back to describing the
+ * shape of the league rather than inventing a correlation, and the Value card
+ * needs prices, which Open Food Facts does not carry at all.
  */
 function buildCards(ratings: Ratings): LabCard[] {
-  const score = (d: (typeof DRINKS)[number]) => blended(d, ratings);
+  const scored = DRINKS.filter((d) => ratings[d.id]);
+  const rated = (d: (typeof DRINKS)[number]) => ratings[d.id]?.score ?? null;
 
   // --- sugar ---
   const zero = DRINKS.filter((d) => d.sug === 0);
-  const full = DRINKS.filter((d) => d.sug > 0);
-  const zeroAvg = average(zero, score);
-  const fullAvg = average(full, score);
-  const sugarGap = Math.abs(zeroAvg - fullAvg);
-  const sugarVerdict =
-    sugarGap < 0.08
-      ? `Dead heat — ${sugarGap.toFixed(2)} points between them. Sugar is not the variable that decides this league.`
-      : zeroAvg > fullAvg
-        ? `Zero-sugar cans lead full-sugar by ${sugarGap.toFixed(2)} points. The reformulation era won.`
-        : `Full-sugar cans still lead by ${sugarGap.toFixed(2)} points, off a much smaller field. The classics hold.`;
+  const full = DRINKS.filter((d) => d.sug !== null && d.sug > 0);
+  const unknown = DRINKS.filter((d) => d.sug === null);
+  const zeroAvg = averageOf(zero, rated);
+  const fullAvg = averageOf(full, rated);
+
+  let sugarVerdict: string;
+  if (zeroAvg === null || fullAvg === null) {
+    const pct = Math.round((zero.length / (zero.length + full.length)) * 100);
+    sugarVerdict = `${pct}% of the cans with sugar data are zero-sugar — the reformulation era is the default now. Rate cans from both camps to see whether it actually tastes better.`;
+  } else {
+    const gap = Math.abs(zeroAvg - fullAvg);
+    sugarVerdict =
+      gap < 0.3
+        ? `Near dead heat in your ratings — ${gap.toFixed(2)} points between them.`
+        : zeroAvg > fullAvg
+          ? `You score zero-sugar ${gap.toFixed(2)} points above full-sugar.`
+          : `You score full-sugar ${gap.toFixed(2)} points above zero-sugar.`;
+  }
 
   // --- caffeine ---
   const bandColors = ["#3EE8FF", "#D8FF3E", "#9AFF3E", "#FF5B24"];
   const bands = CAFFEINE_BANDS.map(([min, max, label], i) => {
     const group = DRINKS.filter((d) => d.caf >= min && d.caf < max);
-    return {
-      label,
-      n: group.length,
-      avg: group.length ? average(group, score) : null,
-      color: bandColors[i],
-    };
+    return { label, n: group.length, color: bandColors[i] };
   });
-  const filled = bands.filter((b) => b.avg !== null) as {
-    label: string;
-    n: number;
-    avg: number;
-    color: string;
-  }[];
-  const best = [...filled].sort((a, b) => b.avg - a.avg)[0];
-  const worst = [...filled].sort((a, b) => a.avg - b.avg)[0];
-  const caffeineVerdict = `The sweet spot is ${best.label.toLowerCase()} at ${best.avg.toFixed(2)}. The ${worst.label.toLowerCase()} band is the weakest at ${worst.avg.toFixed(2)} — more milligrams is not more points.`;
+  const biggestBand = [...bands].sort((a, b) => b.n - a.n)[0];
+  const maxBand = Math.max(...bands.map((b) => b.n), 1);
+  const caffeineVerdict = `The league clusters in the ${biggestBand.label.toLowerCase()} band (${biggestBand.n} of ${DRINKS.length} cans). Whether more milligrams means more points needs ratings across every band.`;
 
-  // --- value ---
-  const byPrice = [...DRINKS].sort((a, b) => a.price - b.price);
-  const half = Math.floor(byPrice.length / 2);
-  const cheapAvg = average(byPrice.slice(0, half), score);
-  const dearAvg = average(byPrice.slice(-half), score);
-  const priceGap = Math.abs(cheapAvg - dearAvg);
-  const valueVerdict =
-    priceGap < 0.25
-      ? `Price barely predicts score — ${priceGap.toFixed(2)} points separate the cheap half from the expensive half.`
-      : cheapAvg > dearAvg
-        ? `The cheaper half of the league out-scores the pricier half by ${priceGap.toFixed(2)} points. Paying more is not working.`
-        : `The pricier half edges the cheap half by ${priceGap.toFixed(2)} points — the only place spending shows up.`;
-
-  return [
+  const cards: LabCard[] = [
     {
       title: "Sugar",
-      sub: "Average crowd score by sugar content",
+      sub: "How the catalog splits on sugar",
       verdict: sugarVerdict,
       bars: [
         {
           label: `Zero sugar (${zero.length})`,
-          val: zeroAvg.toFixed(2),
-          pct: barPercent(zeroAvg),
+          val: String(zero.length),
+          pct: Math.round((zero.length / DRINKS.length) * 100),
           color: "#D8FF3E",
         },
         {
-          label: `Full sugar (${full.length})`,
-          val: fullAvg.toFixed(2),
-          pct: barPercent(fullAvg),
+          label: `Has sugar (${full.length})`,
+          val: String(full.length),
+          pct: Math.round((full.length / DRINKS.length) * 100),
           color: "#FF5B24",
         },
+        ...(unknown.length
+          ? [
+              {
+                label: `No data (${unknown.length})`,
+                val: "—",
+                pct: Math.round((unknown.length / DRINKS.length) * 100),
+                color: "#2C3024",
+              },
+            ]
+          : []),
       ],
     },
     {
       title: "Caffeine",
-      sub: "Score by dose band — more is not better",
+      sub: "Cans per dose band",
       verdict: caffeineVerdict,
       bars: bands.map((b) => ({
-        label: `${b.label} (${b.n})`,
-        val: b.avg === null ? "—" : b.avg.toFixed(2),
-        pct: b.avg === null ? 0 : barPercent(b.avg),
+        label: b.label,
+        val: String(b.n),
+        pct: Math.round((b.n / maxBand) * 100),
         color: b.color,
       })),
     },
     {
-      title: "Value",
-      sub: "Caffeine milligrams per dollar",
-      verdict: valueVerdict,
+      title: "Intensity",
+      sub: "Strongest caffeine per 100 ml",
+      verdict:
+        "Caffeine density is the one intensity measure that needs no opinion — it comes straight off the panel.",
       bars: [...DRINKS]
-        .sort((a, b) => b.caf / b.price - a.caf / a.price)
+        .sort((a, b) => caffeineDensity(b) - caffeineDensity(a))
         .slice(0, 5)
         .map((d) => ({
           label: d.name,
-          val: `${Math.round(d.caf / d.price)} mg/$`,
-          pct: Math.round(d.caf / d.price / 1.25),
+          val: `${caffeineDensity(d).toFixed(0)} mg`,
+          pct: Math.round((caffeineDensity(d) / 70) * 100),
           color: d.color,
         })),
     },
   ];
+
+  // The Value card is deliberately absent rather than empty: Open Food Facts
+  // carries no prices, so mg-per-dollar has no source until users submit them.
+  if (scored.length >= 3) {
+    cards.push({
+      title: "Your palate",
+      sub: `Across the ${scored.length} cans you have rated`,
+      verdict:
+        "Your own averages. These become a comparison against the crowd once sign-in lands.",
+      bars: [
+        {
+          label: "Average score",
+          val: (averageOf(scored, rated) ?? 0).toFixed(2),
+          pct: Math.round(((averageOf(scored, rated) ?? 0) / 10) * 100),
+          color: "#D8FF3E",
+        },
+        {
+          label: "Average caffeine",
+          val: `${Math.round(averageOf(scored, (d) => d.caf) ?? 0)} mg`,
+          pct: Math.round(((averageOf(scored, (d) => d.caf) ?? 0) / 300) * 100),
+          color: "#3EE8FF",
+        },
+      ],
+    });
+  }
+
+  return cards;
 }

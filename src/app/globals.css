@@ -673,6 +673,54 @@ input[type="range"]::-moz-range-thumb {
   background: linear-gradient(160deg, #12140e, #0a0b09);
 }
 
+/* Real can photograph. OFF shoots on white, so it gets a faintly-lit panel
+   rather than sitting as a bright rectangle on the dark background. */
+.canPhoto {
+  width: 116px;
+  height: 190px;
+  flex: none;
+  border-radius: 12px;
+  border: 1px solid var(--line-3);
+  background: radial-gradient(
+    circle at 50% 35%,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.03) 70%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  overflow: hidden;
+}
+
+.canPhotoImg {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
+}
+
+/* Table-row thumbnail, in place of the flat colour swatch. */
+.canThumb {
+  width: 20px;
+  height: 34px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.canThumbImg {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
 .can {
   width: 96px;
   height: 180px;
@@ -883,6 +931,40 @@ input[type="range"]::-moz-range-thumb {
   letter-spacing: 0.08em;
 }
 
+/* "no data yet" copy — deliberately quiet, but never an empty box */
+.emptyNote {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--faint);
+  text-wrap: pretty;
+}
+
+.factList {
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.factRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.factRow dt {
+  color: var(--dim);
+}
+
+.factRow dd {
+  margin: 0;
+  color: var(--text);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 779px) {
   .tableGrid {
     grid-template-columns: 32px minmax(0, 2.2fr) 1.25fr 44px;
@@ -939,6 +1021,40 @@ input[type="range"]::-moz-range-thumb {
 .divisiveRow {
   padding: 10px 0;
   border-bottom: 1px solid #241c0c;
+}
+
+/* Features waiting on the backend — listed rather than faked. */
+.pendingList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 12px;
+}
+
+.pendingList li {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+  padding-left: 14px;
+  position: relative;
+  text-wrap: pretty;
+}
+
+.pendingList li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 5px;
+  height: 5px;
+  border-radius: 99px;
+  background: var(--gold);
+}
+
+.pendingList strong {
+  color: var(--text);
+  font-weight: 700;
 }
 
 .splitBar {
@@ -1119,4 +1235,58 @@ input[type="range"]::-moz-range-thumb {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ==========================================================================
+   Your card (tasters section)
+   ========================================================================== */
+
+.youStat {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.youStatValue {
+  font-size: clamp(38px, 4vw, 52px);
+  line-height: 1;
+  color: var(--lime);
+}
+
+.youStatLabel {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+/* can search, above the chip cloud */
+.canSearch {
+  width: 100%;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  background: var(--ink);
+  border: 1px solid var(--line-2);
+  border-radius: 99px;
+}
+
+.canSearch::placeholder {
+  color: var(--faint);
+}
+
+.canSearch:focus {
+  outline: none;
+  border-color: var(--lime);
+}
+
+/* keep the chip cloud from swallowing the card once submissions pile up */
+.chipRow {
+  max-height: 268px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-3) transparent;
 }

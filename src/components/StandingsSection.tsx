@@ -1,9 +1,19 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { COLS, DRINKS, FILTERS, SLIDER_DEFS } from "@/lib/data";
-import { blended, history, prevRankMap, rankMap, sparkline } from "@/lib/scoring";
+import { COLS, DRINKS, FILTERS, SLIDER_DEFS, tagsFor } from "@/lib/data";
+import {
+  caffeineDensity,
+  fmtScore,
+  prevRankMap,
+  rankMap,
+  scoreFor,
+  sparkline,
+  history,
+  votesFor,
+} from "@/lib/scoring";
 import type { Drink, Ratings, SortKey } from "@/lib/types";
+import { CanImage } from "./CanImage";
 import { SectionHeader } from "./SectionHeader";
 
 type Props = {
@@ -20,6 +30,7 @@ export function StandingsSection({ ratings, onRateThis }: Props) {
 
   const rankOf = useMemo(() => rankMap(ratings), [ratings]);
   const prevRank = useMemo(() => prevRankMap(), []);
+  const ratedCount = Object.keys(ratings).length;
 
   const rows = useMemo(() => {
     const filtered = DRINKS.filter((d) =>
@@ -29,22 +40,26 @@ export function StandingsSection({ ratings, onRateThis }: Props) {
       }),
     );
 
-    const value: Record<SortKey, (d: Drink) => number | string> = {
-      // negated so the shared "descending" comparator puts #1 on top
-      rank: (d) => -rankOf[d.id],
+    // Unscored drinks always sort last, whichever column is active — a can
+    // nobody has rated has no business appearing above one that has been.
+    const value: Record<SortKey, (d: Drink) => number | string | null> = {
+      rank: (d) => (rankOf[d.id] ? -rankOf[d.id] : null),
       name: (d) => d.name,
-      score: (d) => blended(d, ratings),
-      votes: (d) => d.v + (ratings[d.id] ? 1 : 0),
+      score: (d) => scoreFor(d, ratings),
+      votes: (d) => votesFor(d, ratings),
       caf: (d) => d.caf,
       sug: (d) => d.sug,
-      ppd: (d) => d.caf / d.price,
-      delta: (d) => prevRank[d.id] - rankOf[d.id],
+      delta: (d) =>
+        rankOf[d.id] && prevRank[d.id] ? prevRank[d.id] - rankOf[d.id] : null,
     };
     const get = value[sortKey];
 
     return [...filtered].sort((a, b) => {
       const x = get(a);
       const y = get(b);
+      if (x === null && y === null) return a.name.localeCompare(b.name);
+      if (x === null) return 1;
+      if (y === null) return -1;
       const cmp =
         typeof x === "string" && typeof y === "string"
           ? x.localeCompare(y)
@@ -54,9 +69,8 @@ export function StandingsSection({ ratings, onRateThis }: Props) {
   }, [activeFilters, prevRank, rankOf, ratings, sortDir, sortKey]);
 
   const toggleSort = (key: SortKey) => {
-    if (key === sortKey) {
-      setSortDir((d) => (d === 1 ? -1 : 1));
-    } else {
+    if (key === sortKey) setSortDir((d) => (d === 1 ? -1 : 1));
+    else {
       setSortKey(key);
       setSortDir(1);
     }
@@ -73,6 +87,11 @@ export function StandingsSection({ ratings, onRateThis }: Props) {
     <section id="table" className="section">
       <div className="wrap">
         <SectionHeader num="02" title="Standings" />
+        <p className="lede" style={{ margin: "12px 0 0" }}>
+          {ratedCount === 0
+            ? "Nobody has rated anything yet, so there is no table to show. Rate a can and it appears here — this becomes the crowd table once sign-in and the database land."
+            : `Ranked by your ratings. ${ratedCount} of ${DRINKS.length} cans rated — unrated cans sit below the line.`}
+        </p>
 
         <div
           style={{
@@ -134,14 +153,26 @@ export function StandingsSection({ ratings, onRateThis }: Props) {
               key={d.id}
               drink={d}
               ratings={ratings}
-              rank={rankOf[d.id]}
-              delta={prevRank[d.id] - rankOf[d.id]}
+              rank={rankOf[d.id] ?? null}
+              delta={
+                rankOf[d.id] && prevRank[d.id]
+                  ? prevRank[d.id] - rankOf[d.id]
+                  : null
+              }
               open={d.id === openId}
               onToggle={() => setOpenId(openId === d.id ? null : d.id)}
               onRateThis={() => onRateThis(d.id)}
             />
           ))}
         </div>
+
+        <p
+          className="mono"
+          style={{ fontSize: 10, color: "var(--faint)", marginTop: 14 }}
+        >
+          Nutrition and photography from Open Food Facts. Figures are approximate
+          per listed serving.
+        </p>
       </div>
     </section>
   );
@@ -158,16 +189,20 @@ function Row({
 }: {
   drink: Drink;
   ratings: Ratings;
-  rank: number;
-  delta: number;
+  rank: number | null;
+  delta: number | null;
   open: boolean;
   onToggle: () => void;
   onRateThis: () => void;
 }) {
-  const score = blended(d, ratings);
+  const score = scoreFor(d, ratings);
   const mine = ratings[d.id];
   const deltaColor =
-    delta === 0 ? "#5E6552" : delta > 0 ? "#D8FF3E" : "#FF5B24";
+    delta === null || delta === 0
+      ? "#5E6552"
+      : delta > 0
+        ? "#D8FF3E"
+        : "#FF5B24";
 
   return (
     <div
@@ -179,77 +214,71 @@ function Row({
         className="tableGrid rowInner"
         onClick={onToggle}
         aria-expanded={open}
-        aria-label={`${d.name}, rank ${rank}, score ${score.toFixed(2)}`}
+        aria-label={`${d.name}, ${rank ? `rank ${rank}` : "not rated"}`}
       >
         <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span
             className="rowRank"
-            style={{ color: rank <= 3 ? "#D8FF3E" : "#4A5040" }}
+            style={{
+              color: rank === null ? "#3A4030" : rank <= 3 ? "#D8FF3E" : "#4A5040",
+              fontSize: rank === null ? 14 : 20,
+            }}
           >
-            {rank}
+            {rank ?? "—"}
           </span>
         </span>
 
         <span
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            minWidth: 0,
-          }}
+          style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}
         >
-          <span
-            className="rowSwatch"
-            style={{
-              background: `linear-gradient(160deg,${d.color},rgba(0,0,0,.55))`,
-            }}
-            aria-hidden="true"
-          />
+          <CanImage drink={d} variant="row" />
           <span style={{ minWidth: 0 }}>
             <span className="rowName" style={{ display: "block" }}>
               {d.name}
             </span>
             <span className="rowSub" style={{ display: "block" }}>
-              {d.sub} · {d.cal} cal
+              {d.sub}
+              {d.cal === null ? "" : ` · ${d.cal} cal`}
             </span>
           </span>
         </span>
 
         <span style={{ display: "block" }}>
-          <span
-            style={{ display: "flex", alignItems: "baseline", gap: 8 }}
-          >
+          <span style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
             <span
               className="display"
-              style={{ fontSize: 17, color: "var(--lime)" }}
+              style={{
+                fontSize: 17,
+                color: score === null ? "var(--rank-dim)" : "var(--lime)",
+              }}
             >
-              {score.toFixed(2)}
+              {fmtScore(score)}
             </span>
-            <span
-              className="mono"
-              style={{ fontSize: 10, color: "var(--dim)" }}
-            >
+            <span className="mono" style={{ fontSize: 10, color: "var(--dim)" }}>
               {mine ? `you ${mine.score.toFixed(1)}` : ""}
             </span>
           </span>
           <span className="bar" style={{ display: "block" }}>
-            <span
-              className="barFill"
-              style={{
-                display: "block",
-                background: d.color,
-                width: `${Math.round(score * 10)}%`,
-              }}
-            />
+            {score !== null && (
+              <span
+                className="barFill"
+                style={{
+                  display: "block",
+                  background: d.color,
+                  width: `${Math.round(score * 10)}%`,
+                }}
+              />
+            )}
           </span>
         </span>
 
         <span className="rowNum colExt">
-          {(d.v + (mine ? 1 : 0)).toLocaleString()}
+          {votesFor(d, ratings) || "—"}
         </span>
         <span className="rowNum colExt">{d.caf} mg</span>
-        <span className="rowNum colExt">{d.sug} g</span>
-        <span className="rowNum colExt">{Math.round(d.caf / d.price)}</span>
+        <span className="rowNum colExt">
+          {d.sug === null ? "—" : `${d.sug} g`}
+        </span>
         <span
           className="mono"
           style={{
@@ -259,156 +288,148 @@ function Row({
             color: deltaColor,
           }}
         >
-          {delta === 0 ? "—" : delta > 0 ? `▲ ${delta}` : `▼ ${Math.abs(delta)}`}
+          {delta === null || delta === 0
+            ? "—"
+            : delta > 0
+              ? `▲ ${delta}`
+              : `▼ ${Math.abs(delta)}`}
         </span>
       </button>
 
-      {open && (
-        <div className="rowDetail grid230">
-          <div>
-            <div className="label" style={{ marginBottom: 12 }}>
-              Score breakdown
-            </div>
-            {breakdownFor(d, score, mine).map((b) => (
-              <div key={b.label} className="breakdownRow">
-                <span className="breakdownLabel">{b.label}</span>
-                <span
-                  style={{
-                    flex: 1,
-                    height: 8,
-                    borderRadius: 99,
-                    background: "var(--line)",
-                    overflow: "hidden",
-                  }}
-                >
-                  <span
-                    style={{
-                      display: "block",
-                      height: "100%",
-                      background: b.color,
-                      width: `${b.pct}%`,
-                    }}
-                  />
-                </span>
-                <span
-                  className="mono"
-                  style={{
-                    fontSize: 11,
-                    color: "var(--text)",
-                    width: 30,
-                    textAlign: "right",
-                  }}
-                >
-                  {b.val}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <div>
-            <div className="label" style={{ marginBottom: 12 }}>
-              8-week form
-            </div>
-            <svg
-              viewBox="0 0 140 44"
-              style={{ width: "100%", height: 52, overflow: "visible" }}
-              role="img"
-              aria-label={`${d.name} score trend over eight weeks`}
-            >
-              <polyline
-                points={sparkline(d, ratings)}
-                fill="none"
-                stroke={d.color}
-                strokeWidth={2.5}
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              />
-            </svg>
-            <div
-              className="mono"
-              style={{ fontSize: 11, color: "var(--dim)", marginTop: 6 }}
-            >
-              {formNote(d, ratings)}
-            </div>
-          </div>
-
-          <div>
-            <div className="label" style={{ marginBottom: 12 }}>
-              Notes
-            </div>
-            <div
-              style={{
-                fontSize: 14,
-                lineHeight: 1.5,
-                color: "var(--muted)",
-                textWrap: "pretty",
-              }}
-            >
-              {d.note}
-            </div>
-            <button
-              type="button"
-              className="btnOutline"
-              style={{ marginTop: 14 }}
-              onClick={onRateThis}
-            >
-              Rate this one
-            </button>
-          </div>
-        </div>
-      )}
+      {open && <RowDetail drink={d} mine={mine} onRateThis={onRateThis} />}
     </div>
   );
 }
 
-function formNote(d: Drink, ratings: Ratings) {
-  const h = history(d, ratings);
-  const trend = h[7] - h[0];
-  return `${trend >= 0 ? "+" : ""}${trend.toFixed(2)} over 8 weeks · ±${d.sd.toFixed(1)} spread`;
+function RowDetail({
+  drink: d,
+  mine,
+  onRateThis,
+}: {
+  drink: Drink;
+  mine: Ratings[string] | undefined;
+  onRateThis: () => void;
+}) {
+  const points = history();
+  const spark = sparkline(points);
+
+  return (
+    <div className="rowDetail grid230">
+      <div>
+        <div className="label" style={{ marginBottom: 12 }}>
+          {mine ? "Your breakdown" : "Score breakdown"}
+        </div>
+        {mine ? (
+          SLIDER_DEFS.map((s) => (
+            <div key={s.key} className="breakdownRow">
+              <span className="breakdownLabel">{s.label}</span>
+              <span
+                style={{
+                  flex: 1,
+                  height: 8,
+                  borderRadius: 99,
+                  background: "var(--line)",
+                  overflow: "hidden",
+                }}
+              >
+                <span
+                  style={{
+                    display: "block",
+                    height: "100%",
+                    background: d.color,
+                    width: `${mine.vals[s.key] * 10}%`,
+                  }}
+                />
+              </span>
+              <span
+                className="mono"
+                style={{
+                  fontSize: 11,
+                  color: "var(--text)",
+                  width: 30,
+                  textAlign: "right",
+                }}
+              >
+                {mine.vals[s.key]}
+              </span>
+            </div>
+          ))
+        ) : (
+          <p className="emptyNote">
+            No breakdown yet — the four scores appear here once you rate this
+            can.
+          </p>
+        )}
+      </div>
+
+      <div>
+        <div className="label" style={{ marginBottom: 12 }}>
+          Weekly form
+        </div>
+        {spark ? (
+          <svg
+            viewBox="0 0 140 44"
+            style={{ width: "100%", height: 52, overflow: "visible" }}
+            role="img"
+            aria-label={`${d.name} score trend`}
+          >
+            <polyline
+              points={spark}
+              fill="none"
+              stroke={d.color}
+              strokeWidth={2.5}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+            />
+          </svg>
+        ) : (
+          <p className="emptyNote">
+            Form needs weekly snapshots. The first line appears after the league
+            has been running a week.
+          </p>
+        )}
+      </div>
+
+      <div>
+        <div className="label" style={{ marginBottom: 12 }}>
+          The can
+        </div>
+        <dl className="factList">
+          <Fact label="Brand" value={d.brand} />
+          <Fact label="Size" value={`${d.sub} (${d.ml} ml)`} />
+          <Fact
+            label="Intensity"
+            value={`${caffeineDensity(d).toFixed(0)} mg / 100 ml`}
+          />
+          <Fact label="Barcode" value={d.barcode} />
+        </dl>
+        <div
+          style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}
+        >
+          {tagsFor(d).map((t) => (
+            <span key={t} className="tag">
+              {t}
+            </span>
+          ))}
+        </div>
+        <button
+          type="button"
+          className="btnOutline"
+          style={{ marginTop: 14 }}
+          onClick={onRateThis}
+        >
+          {mine ? "Update your rating" : "Rate this one"}
+        </button>
+      </div>
+    </div>
+  );
 }
 
-/**
- * Once you have rated a can, the breakdown shows your own four scores.
- * Until then it shows the crowd's implied profile, derived from the
- * nutrition panel and the spread of ratings.
- */
-function breakdownFor(
-  d: Drink,
-  score: number,
-  mine: Ratings[string] | undefined,
-) {
-  if (mine) {
-    return SLIDER_DEFS.map((s) => ({
-      label: `your ${s.label}`,
-      val: String(mine.vals[s.key]),
-      pct: mine.vals[s.key] * 10,
-      color: d.color,
-    }));
-  }
-  return [
-    {
-      label: "Taste",
-      val: (score * 0.98).toFixed(1),
-      pct: Math.round(score * 9.8),
-      color: d.color,
-    },
-    {
-      label: "Kick",
-      val: ((d.caf / 300) * 10).toFixed(1),
-      pct: Math.round((d.caf / 300) * 100),
-      color: "#3EE8FF",
-    },
-    {
-      label: "Aftertaste",
-      val: (10 - d.sd * 2).toFixed(1),
-      pct: Math.round((10 - d.sd * 2) * 10),
-      color: "#B77BFF",
-    },
-    {
-      label: "Value",
-      val: (d.caf / d.price / 9).toFixed(1),
-      pct: Math.round(d.caf / d.price / 0.9),
-      color: "#FFC53E",
-    },
-  ];
+function Fact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="factRow">
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
+  );
 }

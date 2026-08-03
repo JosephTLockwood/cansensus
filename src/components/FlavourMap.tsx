@@ -1,7 +1,7 @@
 "use client";
 
 import { DRINKS } from "@/lib/data";
-import { blended, rankMap } from "@/lib/scoring";
+import { caffeineDensity, fmtScore, rankMap, scoreFor } from "@/lib/scoring";
 import type { Ratings } from "@/lib/types";
 import { SectionHeader } from "./SectionHeader";
 
@@ -12,9 +12,13 @@ type Props = {
 };
 
 export function FlavourMap({ ratings, hoverId, onHover }: Props) {
-  const scores = DRINKS.map((d) => blended(d, ratings));
-  const lo = Math.min(...scores);
-  const hi = Math.max(...scores);
+  // Dot size tracks score where there is one; unrated cans stay small and
+  // faint rather than pretending to a size they haven't earned.
+  const scores = DRINKS.map((d) => scoreFor(d, ratings)).filter(
+    (v): v is number => v !== null,
+  );
+  const lo = scores.length ? Math.min(...scores) : 0;
+  const hi = scores.length ? Math.max(...scores) : 10;
   const span = Math.max(0.4, hi - lo);
 
   const rankOf = rankMap(ratings);
@@ -25,8 +29,9 @@ export function FlavourMap({ ratings, hoverId, onHover }: Props) {
       <div className="wrap">
         <SectionHeader num="04" title="Flavour map" />
         <p className="lede">
-          Sweet to tart across, mild to nuclear up. Dot size is crowd score.
-          Hover for the read-out.
+          Sugar across, caffeine intensity up &mdash; both from the nutrition
+          panel, not opinion. Dot size is its league score once rated. Hover for
+          the read-out.
         </p>
 
         <div className="mapBox">
@@ -36,19 +41,19 @@ export function FlavourMap({ ratings, hoverId, onHover }: Props) {
             className="mapAxisLabel"
             style={{ left: 18, top: "50%", transform: "translateY(-50%)" }}
           >
-            Tart
+            No sugar
           </span>
           <span
             className="mapAxisLabel"
             style={{ right: 18, top: "50%", transform: "translateY(-50%)" }}
           >
-            Sweet
+            Sugary
           </span>
           <span
             className="mapAxisLabel"
             style={{ top: 14, left: "50%", transform: "translateX(-50%)" }}
           >
-            Nuclear
+            Intense
           </span>
           <span
             className="mapAxisLabel"
@@ -58,8 +63,9 @@ export function FlavourMap({ ratings, hoverId, onHover }: Props) {
           </span>
 
           {DRINKS.map((d) => {
-            const t = (blended(d, ratings) - lo) / span;
-            const size = Math.round(11 + t * 39);
+            const score = scoreFor(d, ratings);
+            const t = score === null ? 0 : (score - lo) / span;
+            const size = score === null ? 11 : Math.round(14 + t * 34);
             return (
               <button
                 key={d.id}
@@ -68,7 +74,7 @@ export function FlavourMap({ ratings, hoverId, onHover }: Props) {
                 onMouseEnter={() => onHover(d.id)}
                 onFocus={() => onHover(d.id)}
                 onClick={() => onHover(d.id)}
-                aria-label={`${d.name}, score ${blended(d, ratings).toFixed(2)}`}
+                aria-label={`${d.name}, score ${fmtScore(score)}`}
                 style={{
                   // sweet 0-100 -> 8-92% across, nuke 0-100 -> 92-8% up
                   left: `${8 + d.sweet * 0.84}%`,
@@ -81,7 +87,7 @@ export function FlavourMap({ ratings, hoverId, onHover }: Props) {
                   style={{
                     border: `2px solid ${d.id === hoverId ? "#F2F4EE" : "#0A0B09"}`,
                     background: d.color,
-                    opacity: 0.5 + t * 0.5,
+                    opacity: score === null ? 0.42 : 0.6 + t * 0.4,
                     width: size,
                     height: size,
                   }}
@@ -117,8 +123,10 @@ export function FlavourMap({ ratings, hoverId, onHover }: Props) {
               className="mono"
               style={{ fontSize: 11, color: "var(--muted)" }}
             >
-              {blended(hovered, ratings).toFixed(2)} · {hovered.caf} mg ·{" "}
-              {hovered.sug} g sugar · rank #{rankOf[hovered.id]}
+              {hovered.caf} mg ·{" "}
+              {hovered.sug === null ? "sugar n/a" : `${hovered.sug} g sugar`} ·{" "}
+              {caffeineDensity(hovered).toFixed(0)} mg/100ml ·{" "}
+              {rankOf[hovered.id] ? `rank #${rankOf[hovered.id]}` : "unrated"}
             </div>
           </div>
         </div>

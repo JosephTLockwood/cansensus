@@ -1,8 +1,10 @@
 "use client";
 
-import { SLIDER_DEFS } from "@/lib/data";
-import { blended, compositeScore, verdictFor } from "@/lib/scoring";
+import { useMemo, useState } from "react";
+import { SLIDER_DEFS, tagsFor } from "@/lib/data";
+import { compositeScore, fmtScore, scoreFor, verdictFor, votesFor } from "@/lib/scoring";
 import type { Drink, Ratings, SliderKey, Vals } from "@/lib/types";
+import { CanImage } from "./CanImage";
 import { SectionHeader } from "./SectionHeader";
 
 type Props = {
@@ -27,8 +29,18 @@ export function RateSection({
   onSubmit,
   onRoulette,
 }: Props) {
+  const [query, setQuery] = useState("");
   const liveScore = compositeScore(vals);
   const mine = ratings[selected.id];
+
+  const shown = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return chipOrder;
+    return chipOrder.filter(
+      (d) =>
+        d.name.toLowerCase().includes(q) || d.brand.toLowerCase().includes(q),
+    );
+  }, [chipOrder, query]);
 
   return (
     <section id="rate" className="section">
@@ -42,11 +54,38 @@ export function RateSection({
         <div className="grid310">
           {/* ---- the form ---- */}
           <div className="card">
-            <div className="label" style={{ marginBottom: 14 }}>
-              Step 1 — choose your poison
+            <div
+              style={{
+                display: "flex",
+                alignItems: "baseline",
+                justifyContent: "space-between",
+                gap: 12,
+                marginBottom: 12,
+                flexWrap: "wrap",
+              }}
+            >
+              <span className="label">Step 1 — choose your poison</span>
+              <span
+                className="mono"
+                style={{ fontSize: 10, color: "var(--faint)" }}
+              >
+                {shown.length} of {chipOrder.length}
+              </span>
             </div>
+
+            {/* At 38 cans the chip cloud already dominated the card, and user
+                submissions only grow it. Filter first, then pick. */}
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search brand or flavour…"
+              aria-label="Search cans"
+              className="mono canSearch"
+            />
+
             <div className="chipRow">
-              {chipOrder.map((d) => {
+              {shown.map((d) => {
                 const on = d.id === selected.id;
                 const rated = !!ratings[d.id];
                 return (
@@ -71,6 +110,12 @@ export function RateSection({
                   </button>
                 );
               })}
+              {shown.length === 0 && (
+                <p className="emptyNote">
+                  Nothing matches “{query}”. Submitting missing cans arrives with
+                  sign-in — including store brands no public database carries.
+                </p>
+              )}
             </div>
 
             <hr className="rule" />
@@ -147,27 +192,15 @@ export function RateSection({
                 flexWrap: "wrap",
               }}
             >
-              <div
-                className="can"
-                style={{
-                  background: `linear-gradient(155deg,${selected.color},#0A0B09 130%)`,
-                }}
-              >
-                <span className="canSheen" />
-                <span className="canRibTop" />
-                <span className="canRibBottom" />
-                <div className="canLabel">
-                  <span className="canLabelText">{selected.name}</span>
-                </div>
-              </div>
+              <CanImage drink={selected} variant="panel" />
 
               <div style={{ minWidth: 0 }}>
                 <div className="label">Now rating</div>
                 <div
                   className="display"
                   style={{
-                    fontSize: 30,
-                    lineHeight: 1,
+                    fontSize: "clamp(22px, 2.2vw, 28px)",
+                    lineHeight: 1.02,
                     letterSpacing: "-.03em",
                     textTransform: "uppercase",
                     margin: "8px 0 4px",
@@ -179,8 +212,8 @@ export function RateSection({
                   className="mono"
                   style={{ fontSize: 12, color: "var(--muted)" }}
                 >
-                  {selected.sub} · {selected.caf} mg caffeine · {selected.sug} g
-                  sugar · ${selected.price.toFixed(2)}
+                  {selected.sub} · {selected.caf} mg caffeine ·{" "}
+                  {selected.sug === null ? "sugar unknown" : `${selected.sug} g sugar`}
                 </div>
 
                 <div
@@ -191,7 +224,7 @@ export function RateSection({
                     marginTop: 14,
                   }}
                 >
-                  {selected.tags.map((t) => (
+                  {tagsFor(selected).map((t) => (
                     <span key={t} className="tag">
                       {t}
                     </span>
@@ -206,9 +239,9 @@ export function RateSection({
                   }}
                 >
                   <div className="kv">
-                    <span>Crowd score</span>
+                    <span>{selected.crowd ? "Crowd score" : "League score"}</span>
                     <span style={{ color: "var(--lime)", fontWeight: 700 }}>
-                      {blended(selected, ratings).toFixed(2)}
+                      {fmtScore(scoreFor(selected, ratings))}
                     </span>
                   </div>
                   <div className="kv" style={{ marginTop: 6 }}>
@@ -220,8 +253,19 @@ export function RateSection({
                   <div className="kv" style={{ marginTop: 6 }}>
                     <span>Ratings</span>
                     <span style={{ color: "var(--text)" }}>
-                      {(selected.v + (mine ? 1 : 0)).toLocaleString()}
+                      {votesFor(selected, ratings).toLocaleString()}
                     </span>
+                  </div>
+                  <div className="kv" style={{ marginTop: 6 }}>
+                    <span>Data</span>
+                    <a
+                      href={selected.source}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontSize: 11 }}
+                    >
+                      Open Food Facts ↗
+                    </a>
                   </div>
                 </div>
               </div>

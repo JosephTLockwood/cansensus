@@ -1,19 +1,19 @@
 import { SEASON, WEEK } from "@/lib/data";
 
 type Props = {
-  totalVotes: number;
   drinkCount: number;
+  brandCount: number;
   myCount: number;
 };
 
-export function Hero({ totalVotes, drinkCount, myCount }: Props) {
+export function Hero({ drinkCount, brandCount, myCount }: Props) {
   return (
     <section className="hero">
       <div className="wrap">
         <div className="heroKicker">
           <span className="heroKickerDot" aria-hidden="true" />
           <span>
-            Season {SEASON} · Week {WEEK} · live standings
+            Season {SEASON} · Week {WEEK} · {drinkCount} cans, sourced
           </span>
         </div>
 
@@ -29,17 +29,17 @@ export function Hero({ totalVotes, drinkCount, myCount }: Props) {
           <p className="heroCopy">
             Everyone drinks them. Nobody agrees. Rate the cans you have actually
             tasted, and the crowd sorts out the truth — scored on taste, kick,
-            aftertaste and value, then cross-referenced against what is
-            genuinely in the can.
+            aftertaste and value, then cross-referenced against the real
+            nutrition panel.
           </p>
 
           <div className="heroStats">
             <Stat
-              value={totalVotes.toLocaleString()}
-              label="Ratings cast"
+              value={drinkCount}
+              label="Cans in play"
               color="var(--lime)"
             />
-            <Stat value={drinkCount} label="Cans in play" />
+            <Stat value={brandCount} label="Brands" />
             <Stat value={myCount} label="Rated by you" color="var(--orange)" />
           </div>
         </div>
