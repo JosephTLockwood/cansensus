@@ -31,6 +31,23 @@ export const CATALOG_META = {
   attributionUrl: catalog.attributionUrl,
 };
 
+/**
+ * Avatar colours. Same set the cans use, kept here rather than imported from the
+ * generated catalog so a handle's colour never depends on what is in stock.
+ */
+const AVATAR_PALETTE = [
+  "#D8FF3E", "#FF5B24", "#3EE8FF", "#B77BFF", "#FFC53E", "#FF4D8D",
+  "#6BFFA8", "#FF8A3E", "#7FB4FF", "#E8FF7A", "#FF6BD6", "#4DFFD2",
+  "#FFD86B", "#9AFF3E", "#FF9B9B", "#5EC8FF",
+];
+
+/** Stable avatar colour for a handle, so it doesn't change between renders. */
+export function PALETTE_FOR_HANDLE(handle: string): string {
+  let hash = 0;
+  for (const ch of handle) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
+  return AVATAR_PALETTE[hash % AVATAR_PALETTE.length];
+}
+
 /** Descriptive chips, derived from the real nutrition panel. */
 export function tagsFor(d: Drink): string[] {
   const tags: string[] = [];

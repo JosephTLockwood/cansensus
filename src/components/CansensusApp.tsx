@@ -217,7 +217,12 @@ export function CansensusApp({
         onHover={setHoverId}
       />
       <LabSection drinks={drinks} ratings={ratings} />
-      <TastersSection drinks={drinks} ratings={ratings} />
+      <TastersSection
+        drinks={drinks}
+        ratings={ratings}
+        myHandle={profile?.handle ?? null}
+        myUserId={userId}
+      />
       <SiteFooter />
       {submitOpen && (
         <SubmitCanDialog
